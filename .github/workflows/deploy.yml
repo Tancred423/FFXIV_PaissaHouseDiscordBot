@@ -31,10 +31,10 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/paissa-house-discord-bot:latest
-            ghcr.io/${{ github.repository_owner }}/paissa-house-discord-bot:${{ github.sha }}
-          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner }}/paissa-house-discord-bot:buildcache
-          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner }}/paissa-house-discord-bot:buildcache,mode=max
+            ghcr.io/${{ github.repository_owner | lowercase }}/paissa-house-discord-bot:latest
+            ghcr.io/${{ github.repository_owner | lowercase }}/paissa-house-discord-bot:${{ github.sha }}
+          cache-from: type=registry,ref=ghcr.io/${{ github.repository_owner | lowercase }}/paissa-house-discord-bot:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ github.repository_owner | lowercase }}/paissa-house-discord-bot:buildcache,mode=max
 
       - name: Deploy to server
         uses: appleboy/ssh-action@master
