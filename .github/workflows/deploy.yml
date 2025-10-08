@@ -37,20 +37,12 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/${{ vars.USERNAME_LOWERCASE }}/paissa-house-discord-bot:buildcache,mode=max
 
       - name: Deploy to server
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          eval $(ssh-agent -s)
-          echo "${{ secrets.SSH_KEY_PASSPHRASE }}" | ssh-add ~/.ssh/deploy_key
-          
-          # Add the server to known_hosts
-          mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
-          
-          # Run deployment commands
-          ssh -o StrictHostKeyChecking=no ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} '
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
             cd ~/paissa-bot
             docker-compose pull
             docker-compose up -d
-          '
