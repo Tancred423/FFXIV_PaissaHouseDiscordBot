@@ -1,0 +1,17 @@
+services:
+  bot:
+    build: .
+    container_name: paissa-house-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - REGISTER_COMMANDS=false
+
+  register-commands:
+    build: .
+    env_file:
+      - .env
+    environment:
+      - REGISTER_COMMANDS=true
+    restart: "no"

@@ -1,0 +1,22 @@
+# Git
+.git
+.gitignore
+
+# Environment variables
+.env
+.env.*
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Logs
+logs
+*.log
+
+# Deno
+.deno
+
+# IDE files
+.vscode
+.idea
