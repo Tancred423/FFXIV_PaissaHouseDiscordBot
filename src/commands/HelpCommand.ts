@@ -59,9 +59,7 @@ export class HelpCommand extends BaseCommand {
 
     if (deploymentHash) {
       embed.setFooter({
-        text: `Deployment: ${
-          deploymentHash.substring(0, 7)
-        } • View source: https://github.com/Tancred423/FFXIV_PaissaHouseDiscordBot/commit/${deploymentHash}`,
+        text: `Deployment Hash: ${deploymentHash}`,
       });
     }
 
