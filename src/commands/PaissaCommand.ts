@@ -116,7 +116,7 @@ export class PaissaCommand extends BaseCommand {
     });
 
     const buttons = this.createPaginationButtons(0, totalPages);
-    await interaction.editReply({
+    const message = await interaction.editReply({
       embeds: [embed as JSONEncodable<APIEmbed>],
       components: [
         buttons as JSONEncodable<
@@ -126,7 +126,7 @@ export class PaissaCommand extends BaseCommand {
     });
 
     this.cleanupExpiredStates();
-    this.setupPaginationCollector(interaction, stateId);
+    this.setupPaginationCollector(interaction, stateId, message.id);
   }
 
   private createPaissaCommandBuilder(): SlashCommandBuilder {
@@ -404,11 +404,14 @@ export class PaissaCommand extends BaseCommand {
   private setupPaginationCollector(
     interaction: ChatInputCommandInteraction,
     stateId: string,
+    messageId: string,
   ): void {
     const collector = interaction.channel?.createMessageComponentCollector({
       componentType: ComponentType.Button,
       time: PAGINATION_TIMEOUT_MILLIS,
-      filter: (i) => i.user.id === interaction.user.id,
+      filter: (i) => {
+        return i.user.id === interaction.user.id && i.message.id === messageId;
+      },
     });
 
     if (collector) {
