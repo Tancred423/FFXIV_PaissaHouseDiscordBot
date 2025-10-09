@@ -1,4 +1,4 @@
-import { OpenPlotDetail } from "../services/PaissaApi.ts";
+import { OpenPlotDetail } from "./ApiTypes.ts";
 
 export interface PlotWithDistrict extends OpenPlotDetail {
   districtId: number;

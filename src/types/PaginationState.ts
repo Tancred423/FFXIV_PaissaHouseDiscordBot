@@ -1,5 +1,5 @@
+import { WorldDetail } from "./ApiTypes.ts";
 import { PlotWithDistrict } from "./PlotWithDistrict.ts";
-import { WorldDetail } from "../services/PaissaApi.ts";
 
 export interface PaginationState {
   plots: PlotWithDistrict[];

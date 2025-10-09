@@ -20,6 +20,10 @@ exec deno run --allow-net --allow-env --allow-read src/main.ts\n\
     chmod +x /app/entrypoint.sh && \
     deno cache --no-lock src/main.ts src/register-commands.ts
 
+# Capture git commit hash during build
+ARG GIT_COMMIT_HASH=""
+ENV DEPLOYMENT_HASH="${GIT_COMMIT_HASH}"
+
 # Environment variables (these will be overridden at runtime)
 ENV DISCORD_BOT_TOKEN=""
 ENV DISCORD_CLIENT_ID=""

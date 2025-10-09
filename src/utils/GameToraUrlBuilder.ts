@@ -1,22 +1,24 @@
-export class HousingUtils {
+import { DistrictId } from "../types/ApiEnums.ts";
+
+export class GameToraUrlBuilder {
   static #getDistrictPath(districtId: number): string {
     switch (districtId) {
-      case 339:
+      case DistrictId.MIST:
         return "mist";
-      case 340:
+      case DistrictId.THE_LAVENDER_BEDS:
         return "lavender-beds";
-      case 341:
+      case DistrictId.THE_GOBLET:
         return "goblet";
-      case 641:
+      case DistrictId.SHIROGANE:
         return "shirogane";
-      case 979:
+      case DistrictId.EMPYREUM:
         return "empyreum";
       default:
         throw Error(`Unknown district ID: ${districtId}`);
     }
   }
 
-  static getPlotUrl(districtId: number, plotNumber: number): string {
+  static buildPlotUrl(districtId: number, plotNumber: number): string {
     const districtPath = this.#getDistrictPath(districtId);
     const urlPlotNumber = plotNumber > 30 ? plotNumber - 30 : plotNumber;
     const formattedPlotNumber = urlPlotNumber.toString().padStart(2, "0");

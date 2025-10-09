@@ -1,9 +1,4 @@
-interface WorldData {
-  id: number;
-  name: string;
-  datacenter_id: number;
-  datacenter_name: string;
-}
+import { WorldData } from "../types/WorldData.ts";
 
 const WORLDS: WorldData[] = [
   { id: 404, name: "Marilith", datacenter_id: 11, datacenter_name: "Dynamis" },
@@ -103,11 +98,13 @@ const WORLDS: WorldData[] = [
   { id: 411, name: "Golem", datacenter_id: 11, datacenter_name: "Dynamis" },
 ];
 
-export function getDatacenters(): string[] {
-  const datacenters = new Set(WORLDS.map((world) => world.datacenter_name));
-  return Array.from(datacenters).sort();
-}
+export class WorldDataHelper {
+  static getDatacenters(): string[] {
+    const datacenters = new Set(WORLDS.map((world) => world.datacenter_name));
+    return Array.from(datacenters).sort();
+  }
 
-export function getWorldsByDatacenter(datacenterName: string): WorldData[] {
-  return WORLDS.filter((world) => world.datacenter_name === datacenterName);
+  static getWorldsByDatacenter(datacenterName: string): WorldData[] {
+    return WORLDS.filter((world) => world.datacenter_name === datacenterName);
+  }
 }

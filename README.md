@@ -36,27 +36,38 @@ complete transparency between the published code and deployed bot.
    - Reset & copy the bot token
    - Copy the application ID (Client ID)
 
-3. **Set up environment variables**: Copy the skeleton file and fill in your
-   values:
+3. **Set up application emojis**:
+   - Still on https://discord.com/developers/applications with your app selected
+   - Go to the "Emojis" section
+   - Upload the emojis from the `/emotes` directory, or create your own ones
+   - Copy the markdown of the emojis
+
+4. **Set up environment variables**:
+   - Copy the skeleton file and fill in your values:
    ```bash
    cp .env.skel .env
    ```
+   - This also includes the bot token, application ID, and emoji markdowns
+     you've copied above.
 
-4. **Build the Docker images**:
+5. **Build the Docker images**:
+   - Build with git commit hash for transparency
    ```bash
-   docker-compose build
+   docker-compose build --build-arg GIT_COMMIT_HASH=$(git rev-parse HEAD)
    ```
 
-5. **Register application commands**:
+6. **Register application commands**:
+   - For development (guild-specific commands)
    ```bash
-   # For development (guild-specific commands)
-   docker-compose run register-commands
-
-   # Or in production (global commands)
-   docker-compose run -e ENVIRONMENT=production register-commands
+   DEPLOYMENT_HASH=$(git rev-parse HEAD) docker-compose run register-commands
+   ```
+   - Or in production (global commands)
+   ```bash
+   DEPLOYMENT_HASH=$(git rev-parse HEAD) docker-compose run -e ENVIRONMENT=production register-commands
    ```
 
-6. **Start the bot**:
+7. **Start the bot**:
    ```bash
-   docker-compose up -d
+   # Start with deployment hash for transparency
+   DEPLOYMENT_HASH=$(git rev-parse HEAD) docker-compose up -d
    ```

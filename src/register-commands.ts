@@ -4,7 +4,7 @@ import {
   Routes,
 } from "discord.js";
 import { config } from "dotenv";
-import { Command } from "./types/Command.ts";
+import { BaseCommand } from "./types/BaseCommand.ts";
 
 config();
 
@@ -20,9 +20,19 @@ try {
     }
 
     const fileName = entry.name;
-    const commandName = fileName.replace(".ts", "");
     const commandModule = await import(`./commands/${fileName}`);
-    const command = commandModule[commandName] as Command;
+
+    const exportedClass = Object.values(commandModule).find(
+      (exported) => typeof exported === "function" && exported.prototype,
+    ) as new () => BaseCommand;
+
+    if (!exportedClass) {
+      console.log(`[WARNING] No class found in ${fileName}`);
+      continue;
+    }
+
+    const commandInstance = new exportedClass();
+    const command = commandInstance.toCommandObject();
 
     if (!command && !("data" in command) && !("execute" in command)) {
       console.log(

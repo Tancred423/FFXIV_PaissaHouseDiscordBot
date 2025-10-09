@@ -15,6 +15,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v2.5.3
+
+      - name: Check formatting
+        run: deno fmt --check
+
+      - name: Run linter
+        run: deno lint
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -30,6 +41,8 @@ jobs:
         with:
           context: .
           push: true
+          build-args: |
+            GIT_COMMIT_HASH=${{ github.sha }}
           tags: |
             ghcr.io/${{ vars.USERNAME_LOWERCASE }}/paissa-house-discord-bot:latest
             ghcr.io/${{ vars.USERNAME_LOWERCASE }}/paissa-house-discord-bot:${{ github.sha }}
@@ -50,5 +63,5 @@ jobs:
             docker image prune -f --filter "label=org.opencontainers.image.source=https://github.com/${{ vars.USERNAME_LOWERCASE }}/FFXIV_PaissaHouseDiscordBot"
             # Pull the latest images
             docker-compose pull
-            # Start the containers
-            docker-compose up -d
+            # Start the containers with deployment hash for transparency
+            DEPLOYMENT_HASH=${{ github.sha }} docker-compose up -d
