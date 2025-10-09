@@ -125,7 +125,7 @@ export class PaissaCommand extends BaseCommand {
       ],
     });
 
-    this.cleanupExistingCollectors(interaction.user.id);
+    this.cleanupExpiredStates();
     this.setupPaginationCollector(interaction, stateId);
   }
 
@@ -386,17 +386,17 @@ export class PaissaCommand extends BaseCommand {
     return row;
   }
 
-  private cleanupExistingCollectors(userId: string): void {
-    for (const [key, collector] of activeCollectors.entries()) {
-      if (key.startsWith(userId)) {
-        collector.stop();
-        activeCollectors.delete(key);
-      }
-    }
-
+  private cleanupExpiredStates(): void {
+    const now = Date.now();
     for (const [key] of paginationStates.entries()) {
-      if (key.startsWith(userId)) {
+      const stateTimestamp = parseInt(key.split("_").pop() || "0");
+      if (now - stateTimestamp > PAGINATION_TIMEOUT_MILLIS) {
         paginationStates.delete(key);
+        const collector = activeCollectors.get(key);
+        if (collector) {
+          collector.stop();
+          activeCollectors.delete(key);
+        }
       }
     }
   }
@@ -408,8 +408,7 @@ export class PaissaCommand extends BaseCommand {
     const collector = interaction.channel?.createMessageComponentCollector({
       componentType: ComponentType.Button,
       time: PAGINATION_TIMEOUT_MILLIS,
-      filter: (i) =>
-        i.user.id === interaction.user.id && i.message.id === interaction.id,
+      filter: (i) => i.user.id === interaction.user.id,
     });
 
     if (collector) {
