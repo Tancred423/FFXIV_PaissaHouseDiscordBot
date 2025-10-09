@@ -4,11 +4,14 @@ import {
   APIEmbed,
   APIMessageActionRowComponent,
   ButtonBuilder,
+  ButtonInteraction,
   ButtonStyle,
+  CacheType,
   ChatInputCommandInteraction,
   ComponentType,
   EmbedBuilder,
   EmbedData,
+  InteractionCollector,
   JSONEncodable,
   SlashCommandBuilder,
 } from "discord.js";
@@ -31,6 +34,10 @@ import { BaseCommand } from "../types/BaseCommand.ts";
 const PLOTS_PER_PAGE = 9;
 const PAGINATION_TIMEOUT_MILLIS = 5 * 60 * 1000;
 const paginationStates = new Map<string, PaginationState>();
+const activeCollectors = new Map<
+  string,
+  InteractionCollector<ButtonInteraction<CacheType>>
+>();
 
 const FILTER_FCFS = -2;
 const FILTER_MISSING_OUTDATED = -1;
@@ -74,7 +81,7 @@ export class PaissaCommand extends BaseCommand {
       return;
     }
 
-    const stateId = `${interaction.user.id}_${Date.now()}`;
+    const stateId = `${interaction.user.id}_${interaction.id}_${Date.now()}`;
     const totalPages = Math.ceil(totalPlots / PLOTS_PER_PAGE);
 
     const allPlots: PlotWithDistrict[] = worldDetail.districts.flatMap((
@@ -118,6 +125,7 @@ export class PaissaCommand extends BaseCommand {
       ],
     });
 
+    this.cleanupExistingCollectors(interaction.user.id);
     this.setupPaginationCollector(interaction, stateId);
   }
 
@@ -213,6 +221,12 @@ export class PaissaCommand extends BaseCommand {
                   name: "Individual",
                   value: PurchaseSystem.INDIVIDUAL.toString(),
                 },
+                {
+                  name: "Unrestricted",
+                  value:
+                    (PurchaseSystem.FREE_COMPANY | PurchaseSystem.INDIVIDUAL)
+                      .toString(),
+                },
               )
           )
       );
@@ -260,9 +274,16 @@ export class PaissaCommand extends BaseCommand {
       });
     }
     if (allowedTenantsFilter !== null) {
-      filteredPlots = filteredPlots.filter((plot) =>
-        (plot.purchase_system & allowedTenantsFilter) !== 0
-      );
+      filteredPlots = filteredPlots.filter((plot) => {
+        if (
+          allowedTenantsFilter ===
+            (PurchaseSystem.FREE_COMPANY | PurchaseSystem.INDIVIDUAL)
+        ) {
+          return (plot.purchase_system & PurchaseSystem.FREE_COMPANY) !== 0 &&
+            (plot.purchase_system & PurchaseSystem.INDIVIDUAL) !== 0;
+        }
+        return (plot.purchase_system & allowedTenantsFilter) !== 0;
+      });
     }
 
     const totalPlots = filteredPlots.length;
@@ -365,6 +386,21 @@ export class PaissaCommand extends BaseCommand {
     return row;
   }
 
+  private cleanupExistingCollectors(userId: string): void {
+    for (const [key, collector] of activeCollectors.entries()) {
+      if (key.startsWith(userId)) {
+        collector.stop();
+        activeCollectors.delete(key);
+      }
+    }
+
+    for (const [key] of paginationStates.entries()) {
+      if (key.startsWith(userId)) {
+        paginationStates.delete(key);
+      }
+    }
+  }
+
   private setupPaginationCollector(
     interaction: ChatInputCommandInteraction,
     stateId: string,
@@ -372,8 +408,13 @@ export class PaissaCommand extends BaseCommand {
     const collector = interaction.channel?.createMessageComponentCollector({
       componentType: ComponentType.Button,
       time: PAGINATION_TIMEOUT_MILLIS,
-      filter: (i) => i.user.id === interaction.user.id,
+      filter: (i) =>
+        i.user.id === interaction.user.id && i.message.id === interaction.id,
     });
+
+    if (collector) {
+      activeCollectors.set(stateId, collector);
+    }
 
     collector?.on("collect", async (buttonInteraction) => {
       const state = paginationStates.get(stateId);
@@ -434,6 +475,7 @@ export class PaissaCommand extends BaseCommand {
 
     collector?.on("end", async () => {
       paginationStates.delete(stateId);
+      activeCollectors.delete(stateId);
 
       try {
         const message = await interaction.fetchReply();
