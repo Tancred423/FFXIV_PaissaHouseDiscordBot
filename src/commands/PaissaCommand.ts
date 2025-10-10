@@ -233,6 +233,23 @@ export class PaissaCommand extends BaseCommand {
     return paissaBuilder;
   }
 
+  private getNextOrLatestPhaseChange(worldDetail: WorldDetail): number {
+    const now = Date.now() / 1000;
+    const allPlots = worldDetail.districts.flatMap((district) =>
+      district.open_plots
+    );
+    const sortedPhaseChangeTimes = allPlots
+      .map((plot) => plot.lotto_phase_until ?? 0)
+      .filter((time) => time > 0)
+      .sort((a, b) => a - b);
+
+    const nextPhaseChange = sortedPhaseChangeTimes.find((time) => time > now);
+    if (nextPhaseChange) {
+      return nextPhaseChange;
+    }
+    return sortedPhaseChangeTimes[sortedPhaseChangeTimes.length - 1] ?? 0;
+  }
+
   private createHousingEmbed(
     worldDetail: WorldDetail,
     districtFilter: number | null,
@@ -287,20 +304,58 @@ export class PaissaCommand extends BaseCommand {
     const totalPlots = filteredPlots.length;
     const totalPages = Math.ceil(totalPlots / PLOTS_PER_PAGE);
     const hasPagination = totalPlots > PLOTS_PER_PAGE;
-
     const startIndex = page * PLOTS_PER_PAGE;
     const endIndex = Math.min(startIndex + PLOTS_PER_PAGE, totalPlots);
     const currentPlots = filteredPlots.slice(startIndex, endIndex);
 
-    let title = `${worldDetail.name}`;
-    let description = `Open Plots: ${totalPlots}`;
+    const title = `${worldDetail.name}`;
+
+    const allPlotsOnWorld: PlotWithDistrict[] = worldDetail.districts.flatMap(
+      (district) =>
+        district.open_plots.map((plot) => ({
+          ...plot,
+          districtId: district.id,
+          districtName: district.name,
+        })),
+    );
+    const totalPlotsOnWorld = allPlotsOnWorld.length;
+    const entryPhasePlots = allPlotsOnWorld.filter((plot) => {
+      if (!PlotValidationService.isLottery(plot)) return false;
+      if (PlotValidationService.isUnknownOrOutdatedPhase(plot)) return false;
+      return plot.lotto_phase === LottoPhase.ENTRY;
+    }).length;
+    const missingDataPlots =
+      allPlotsOnWorld.filter((plot) =>
+        PlotValidationService.isUnknownOrOutdatedPhase(plot)
+      ).length;
+    const missingDataPlotsText = missingDataPlots > 0
+      ? `, Missing/outdated data: ${missingDataPlots}`
+      : "";
+
+    let description =
+      `Open plots: ${totalPlotsOnWorld} (Available: ${entryPhasePlots}${missingDataPlotsText})`;
+
+    const phaseChangeTime = this.getNextOrLatestPhaseChange(worldDetail);
+    if (phaseChangeTime > 0) {
+      const now = Date.now() / 1000;
+      if (phaseChangeTime > now) {
+        const discordTimestamp = Math.floor(phaseChangeTime);
+        description +=
+          `\nLottery phase ends: <t:${discordTimestamp}:F> (<t:${discordTimestamp}:R>)`;
+      } else {
+        const discordTimestamp = Math.floor(phaseChangeTime);
+        description +=
+          `\nLottery phase ended: <t:${discordTimestamp}:F> (<t:${discordTimestamp}:R>)`;
+      }
+    } else {
+      description += `\nLottery phase ends: Insufficient data`;
+    }
 
     const activeFilters: string[] = [];
     if (districtFilter !== null) {
       const district = worldDetail.districts.find((district) =>
         district.id === districtFilter
       );
-      title += ` - ${TextOutputBuilder.getDistrict(district?.name)}`;
       activeFilters.push(
         TextOutputBuilder.getDistrictWithEmoji(district?.name),
       );
@@ -319,8 +374,15 @@ export class PaissaCommand extends BaseCommand {
       );
     }
 
-    if (activeFilters.length > 0) {
-      description += `\nFilters: ${activeFilters.join(" • ")}`;
+    if (totalPlots !== totalPlotsOnWorld) {
+      const filteredPlotsText = totalPlots === 1 ? "plot" : "plots";
+      if (activeFilters.length > 0) {
+        description += `\n\nFiltered ${totalPlots} ${filteredPlotsText}: ${
+          activeFilters.join(" • ")
+        }`;
+      } else {
+        description += `\n\nFiltered ${totalPlots} ${filteredPlotsText}`;
+      }
     }
 
     const embed = new EmbedBuilder()
