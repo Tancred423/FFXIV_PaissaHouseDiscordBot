@@ -23,8 +23,7 @@ export class HelpCommand extends BaseCommand {
       .setTitle("PaissaHouse")
       .setThumbnail("https://zhu.codes/assets/PaissaLogo.c38c9420.png")
       .setDescription(
-        "An unofficial Discord bot developed by [Tancred](https://github.com/Tancred423) to display data from [PaissaDB](https://zhu.codes/paissa). It also provides links to the [GameTora Housing Plot Viewer](https://gametora.com/ffxiv/housing-plot-viewer)\n" +
-          "This Discord bot is NOT affiliated with either PaissaDB nor GameTora. I just really like their work.",
+        "An unofficial Discord bot developed by [Tancred](https://github.com/Tancred423) to display data from [PaissaDB](https://zhu.codes/paissa). It also provides links to the [GameTora Housing Plot Viewer](https://gametora.com/ffxiv/housing-plot-viewer). This Discord bot is NOT affiliated with either PaissaDB nor GameTora. I just really like their work.",
       )
       .setColor(ColorHelper.getEmbedColor())
       .addFields(
@@ -40,8 +39,7 @@ export class HelpCommand extends BaseCommand {
           name: "Is this bot safe to use?",
           value:
             "Yes. First of all, this Discord bot does not break the TOS of SquareEnix as it just reads data from the PaissaDB API and therefore does not interact with the game in any way.\n" +
-            "Furthermore, this bot is [open source](https://github.com/Tancred423/FFXIV_PaissaHouseDiscordBot) and the GitHub code will be automatically deployed to the server so you can be sure that the code you see is the code that runs on the server. Feel free to check out the code and open an issue if needed.\n" +
-            "If you own or rent a server, you can also host this bot yourself. The instructions are in the README file on the GitHub.",
+            "Furthermore, this bot is [open source](https://github.com/Tancred423/FFXIV_PaissaHouseDiscordBot) and the GitHub code will be automatically deployed to the server so you can be sure that the code you see is the code that runs on the server.",
           inline: false,
         },
       )
@@ -49,8 +47,7 @@ export class HelpCommand extends BaseCommand {
         {
           name: "/paissa [datacenter] [world]",
           value:
-            "Use this command to display current houses for sale. You will have to pick the command for your datacenter and then choose your world.\n" +
-            "There are optional parameters to filter the results:\n" +
+            "Use this command to display current houses for sale. You will have to pick the command for your datacenter and then choose your world. There are optional parameters to filter the results:\n" +
             "`/paissa [datacenter] [world] [district?] [size?] [lottery-phase?] [allowed-tenants?]`\n" +
             "The Discord slash command interface should guide you through this command with ease.",
           inline: false,
