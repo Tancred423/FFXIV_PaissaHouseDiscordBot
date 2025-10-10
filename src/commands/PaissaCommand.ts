@@ -30,6 +30,7 @@ import {
 import { PlotValidationService } from "../services/PlotValidationService.ts";
 import { WorldDetail } from "../types/ApiTypes.ts";
 import { BaseCommand } from "../types/BaseCommand.ts";
+import { FilterPhase } from "../types/FilterPhase.ts";
 
 const PLOTS_PER_PAGE = 9;
 const PAGINATION_TIMEOUT_MILLIS = 5 * 60 * 1000;
@@ -38,9 +39,6 @@ const activeCollectors = new Map<
   string,
   InteractionCollector<ButtonInteraction<CacheType>>
 >();
-
-const FILTER_FCFS = -2;
-const FILTER_MISSING_OUTDATED = -1;
 
 export class PaissaCommand extends BaseCommand {
   readonly data = this.createPaissaCommandBuilder();
@@ -200,10 +198,10 @@ export class PaissaCommand extends BaseCommand {
                   name: "Unavailable",
                   value: LottoPhase.UNAVAILABLE.toString(),
                 },
-                { name: "FCFS", value: FILTER_FCFS.toString() },
+                { name: "FCFS", value: FilterPhase.FCFS.toString() },
                 {
                   name: "Missing/Outdated",
-                  value: FILTER_MISSING_OUTDATED.toString(),
+                  value: FilterPhase.MISSING_OUTDATED.toString(),
                 },
               )
           )
@@ -265,10 +263,10 @@ export class PaissaCommand extends BaseCommand {
     if (lotteryPhaseFilter !== null) {
       filteredPlots = filteredPlots.filter((plot) => {
         if (!PlotValidationService.isLottery(plot)) {
-          return lotteryPhaseFilter === FILTER_FCFS;
+          return lotteryPhaseFilter === FilterPhase.FCFS;
         }
         if (PlotValidationService.isUnknownOrOutdatedPhase(plot)) {
-          return lotteryPhaseFilter === FILTER_MISSING_OUTDATED;
+          return lotteryPhaseFilter === FilterPhase.MISSING_OUTDATED;
         }
         return plot.lotto_phase === lotteryPhaseFilter;
       });
@@ -297,18 +295,32 @@ export class PaissaCommand extends BaseCommand {
     let title = `${worldDetail.name}`;
     let description = `Open Plots: ${totalPlots}`;
 
+    const activeFilters: string[] = [];
     if (districtFilter !== null) {
       const district = worldDetail.districts.find((district) =>
         district.id === districtFilter
       );
-      title += ` - ${district?.name || "Unknown District"}`;
-      description = `Open Plots in ${
-        district?.name || "Unknown District"
-      }: ${totalPlots}`;
+      title += ` - ${TextOutputBuilder.getDistrict(district?.name)}`;
+      activeFilters.push(
+        TextOutputBuilder.getDistrictWithEmoji(district?.name),
+      );
+    }
+    if (sizeFilter !== null) {
+      activeFilters.push(TextOutputBuilder.getSizeWithEmoji(sizeFilter));
+    }
+    if (lotteryPhaseFilter !== null) {
+      activeFilters.push(
+        TextOutputBuilder.getLotteryPhaseWithEmoji(lotteryPhaseFilter),
+      );
+    }
+    if (allowedTenantsFilter !== null) {
+      activeFilters.push(
+        TextOutputBuilder.getAllowedTenantsWithEmoji(allowedTenantsFilter),
+      );
     }
 
-    if (sizeFilter !== null) {
-      description += ` (${TextOutputBuilder.getSizeText(sizeFilter)} only)`;
+    if (activeFilters.length > 0) {
+      description += `\nFilters: ${activeFilters.join(" • ")}`;
     }
 
     const embed = new EmbedBuilder()
@@ -319,16 +331,18 @@ export class PaissaCommand extends BaseCommand {
     if (currentPlots.length > 0) {
       currentPlots.forEach((plot: PlotWithDistrict) => {
         embed.addFields({
-          name: TextOutputBuilder.getFieldNameText(plot),
+          name: TextOutputBuilder.getFieldName(plot),
           value: [
-            TextOutputBuilder.getDistrictText(districtFilter, plot),
-            TextOutputBuilder.getSizeText(plot.size),
-            TextOutputBuilder.getPriceText(plot),
-            TextOutputBuilder.getEntriesText(plot),
-            TextOutputBuilder.getLotteryPhaseText(plot),
-            TextOutputBuilder.getAllowedTenantsText(plot),
-            TextOutputBuilder.getLastUpdatedText(plot),
-            TextOutputBuilder.getGameToraLinkText(plot),
+            TextOutputBuilder.getDistrictWithEmoji(plot.districtName),
+            TextOutputBuilder.getSizeWithEmoji(plot.size),
+            TextOutputBuilder.getPriceWithEmoji(plot.price),
+            TextOutputBuilder.getEntries(plot),
+            TextOutputBuilder.getLotteryPhaseWithEmojiByPlot(plot),
+            TextOutputBuilder.getAllowedTenantsWithEmoji(
+              plot.purchase_system,
+            ),
+            TextOutputBuilder.getLastUpdatedWithEmoji(plot),
+            TextOutputBuilder.getGameToraLinkWithEmoji(plot),
           ].join("\n"),
           inline: true,
         });

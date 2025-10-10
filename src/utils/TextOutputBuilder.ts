@@ -4,87 +4,75 @@ import { PlotValidationService } from "../services/PlotValidationService.ts";
 import { GameToraUrlBuilder } from "./GameToraUrlBuilder.ts";
 import { EmojiHelper } from "./EmojiHelper.ts";
 import { EmojiName } from "../types/EmojiName.ts";
+import { FilterPhase } from "../types/FilterPhase.ts";
 
 export class TextOutputBuilder {
-  static getAllowedTenantsText(plot: PlotWithDistrict): string {
-    const purchaseSystem = plot.purchase_system;
-
+  static getAllowedTenantsWithEmoji(purchaseSystem: number): string {
     if (
       (purchaseSystem &
         (PurchaseSystem.FREE_COMPANY | PurchaseSystem.INDIVIDUAL)) ==
         (PurchaseSystem.FREE_COMPANY | PurchaseSystem.INDIVIDUAL)
     ) {
-      return EmojiHelper.get(
-        EmojiName.EMOJI_ALLOWED_TENANTS_UNRESTRICTED,
-      ) + " Unrestricted";
+      return EmojiHelper.get(EmojiName.EMOJI_ALLOWED_TENANTS_UNRESTRICTED) +
+        " Unrestricted";
     }
 
     if (purchaseSystem & PurchaseSystem.FREE_COMPANY) {
-      return EmojiHelper.get(
-        EmojiName.EMOJI_ALLOWED_TENANTS_FREE_COMPANY,
-      ) + " Free Company";
+      return EmojiHelper.get(EmojiName.EMOJI_ALLOWED_TENANTS_FREE_COMPANY) +
+        " Free Company";
     }
 
     return EmojiHelper.get(EmojiName.EMOJI_ALLOWED_TENANTS_INDIVIDUAL) +
       " Individual";
   }
 
-  static getDistrictText(
-    districtFilter: number | null,
-    plot: PlotWithDistrict,
-  ): string {
-    return districtFilter !== null
-      ? ""
-      : EmojiHelper.get(EmojiName.EMOJI_AETHERYTE) + " " + plot.districtName;
+  static getDistrict(districtName: string | null | undefined): string {
+    return districtName || "Unknown District";
   }
 
-  static getEntriesText(plot: PlotWithDistrict): string {
-    const emote = EmojiHelper.get(EmojiName.EMOJI_ENTRIES) + " ";
+  static getDistrictWithEmoji(
+    districtName: string | null | undefined,
+  ): string {
+    return EmojiHelper.get(EmojiName.EMOJI_AETHERYTE) + " " +
+      this.getDistrict(districtName);
+  }
+
+  static getEntries(plot: PlotWithDistrict): string {
+    const emoji = EmojiHelper.get(EmojiName.EMOJI_ENTRIES) + " ";
 
     if (!PlotValidationService.isLottery(plot)) {
-      return emote + "N/A";
+      return emoji + "N/A";
     }
 
     if (
       plot.lotto_phase === null || PlotValidationService.isOutdatedPhase(plot)
     ) {
-      return emote + "_Missing Pl. Data_";
+      return emoji + "_Missing Pl. Data_";
     }
 
-    return emote + (plot.lotto_entries?.toString() ?? "0");
+    return emoji + (plot.lotto_entries?.toString() ?? "0");
   }
 
-  static getFieldNameText(plot: PlotWithDistrict): string {
+  static getFieldName(plot: PlotWithDistrict): string {
     return `Plot ${plot.plot_number + 1} (Ward ${plot.ward_number + 1})`;
   }
 
-  static getGameToraLinkText(plot: PlotWithDistrict): string {
+  static getGameToraLinkWithEmoji(plot: PlotWithDistrict): string {
     const plotUrl = GameToraUrlBuilder.buildPlotUrl(
       plot.districtId,
       plot.plot_number + 1,
     );
-    const emote = EmojiHelper.get(EmojiName.EMOJI_GAMETORA);
-    return `[${emote} View plot](${plotUrl})`;
+    const emoji = EmojiHelper.get(EmojiName.EMOJI_GAMETORA);
+    return `[${emoji} View plot](${plotUrl})`;
   }
 
-  static getLastUpdatedText(plot: PlotWithDistrict): string {
+  static getLastUpdatedWithEmoji(plot: PlotWithDistrict): string {
     return EmojiHelper.get(EmojiName.EMOJI_LAST_UPDATED) +
       ` <t:${Math.floor(plot.last_updated_time)}:R>`;
   }
 
-  static getLotteryPhaseText(plot: PlotWithDistrict): string {
-    if (!PlotValidationService.isLottery(plot)) {
-      return EmojiHelper.get(EmojiName.EMOJI_FCFS) + " FCFS";
-    }
-
-    if (
-      plot.lotto_phase === null || PlotValidationService.isOutdatedPhase(plot)
-    ) {
-      return EmojiHelper.get(EmojiName.EMOJI_PHASE_MISSING_PLACARD_DATA) +
-        " _Missing Pl. Data_";
-    }
-
-    switch (plot.lotto_phase) {
+  static getLotteryPhaseWithEmoji(phase: number | null | undefined): string {
+    switch (phase) {
       case LottoPhase.ENTRY:
         return EmojiHelper.get(EmojiName.EMOJI_PHASE_ACCEPTING_ENTRIES) +
           " Accepting Entries";
@@ -93,18 +81,37 @@ export class TextOutputBuilder {
       case LottoPhase.UNAVAILABLE:
         return EmojiHelper.get(EmojiName.EMOJI_PHASE_UNAVAILABLE) +
           " Unavailable";
+      case FilterPhase.FCFS:
+        return EmojiHelper.get(EmojiName.EMOJI_FCFS) + " FCFS";
+      case FilterPhase.MISSING_OUTDATED:
+        return EmojiHelper.get(EmojiName.EMOJI_PHASE_MISSING_PLACARD_DATA) +
+          " Missing/Outdated";
       default:
         return EmojiHelper.get(EmojiName.EMOJI_PHASE_MISSING_PLACARD_DATA) +
-          ` Unknown (${plot.lotto_phase})`;
+          ` Unknown (${phase})`;
     }
   }
 
-  static getPriceText(plot: PlotWithDistrict): string {
-    return EmojiHelper.get(EmojiName.EMOJI_GIL) + " " +
-      new Intl.NumberFormat("en-US").format(plot.price);
+  static getLotteryPhaseWithEmojiByPlot(plot: PlotWithDistrict): string {
+    if (!PlotValidationService.isLottery(plot)) {
+      return this.getLotteryPhaseWithEmoji(FilterPhase.FCFS);
+    }
+
+    if (
+      plot.lotto_phase === null || PlotValidationService.isOutdatedPhase(plot)
+    ) {
+      return this.getLotteryPhaseWithEmoji(FilterPhase.MISSING_OUTDATED);
+    }
+
+    return this.getLotteryPhaseWithEmoji(plot.lotto_phase);
   }
 
-  static getSizeText(size: number): string {
+  static getPriceWithEmoji(price: number): string {
+    return EmojiHelper.get(EmojiName.EMOJI_GIL) + " " +
+      new Intl.NumberFormat("en-US").format(price);
+  }
+
+  static getSizeWithEmoji(size: number): string {
     switch (size) {
       case HouseSize.SMALL:
         return EmojiHelper.get(EmojiName.EMOJI_SMALL) + " Small";
