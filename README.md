@@ -5,7 +5,7 @@ An unofficial Discord bot to display data from
 
 ## Add the bot to your server
 
-[Click here](https://discord.com/oauth2/authorize?client_id=1425410120568803400&permissions=0&integration_type=0&scope=applications.commands+bot)
+[Click here](https://discord.com/oauth2/authorize?client_id=1425410120568803400&permissions=281600&integration_type=0&scope=bot+applications.commands)
 to add the bot to your server.
 
 ## Commands
