@@ -31,6 +31,7 @@ import { PlotValidationService } from "../services/PlotValidationService.ts";
 import { WorldDetail } from "../types/ApiTypes.ts";
 import { BaseCommand } from "../types/BaseCommand.ts";
 import { FilterPhase } from "../types/FilterPhase.ts";
+import { PaissaDbUrlBuilder } from "../utils/PaissaDbUrlBuilder.ts";
 
 const PLOTS_PER_PAGE = 9;
 const PAGINATION_TIMEOUT_MILLIS = 5 * 60 * 1000;
@@ -219,12 +220,6 @@ export class PaissaCommand extends BaseCommand {
                   name: "Individual",
                   value: PurchaseSystem.INDIVIDUAL.toString(),
                 },
-                {
-                  name: "Unrestricted",
-                  value:
-                    (PurchaseSystem.FREE_COMPANY | PurchaseSystem.INDIVIDUAL)
-                      .toString(),
-                },
               )
           )
       );
@@ -289,16 +284,9 @@ export class PaissaCommand extends BaseCommand {
       });
     }
     if (allowedTenantsFilter !== null) {
-      filteredPlots = filteredPlots.filter((plot) => {
-        if (
-          allowedTenantsFilter ===
-            (PurchaseSystem.FREE_COMPANY | PurchaseSystem.INDIVIDUAL)
-        ) {
-          return (plot.purchase_system & PurchaseSystem.FREE_COMPANY) !== 0 &&
-            (plot.purchase_system & PurchaseSystem.INDIVIDUAL) !== 0;
-        }
-        return (plot.purchase_system & allowedTenantsFilter) !== 0;
-      });
+      filteredPlots = filteredPlots.filter((plot) =>
+        (plot.purchase_system & allowedTenantsFilter) !== 0
+      );
     }
 
     const totalPlots = filteredPlots.length;
@@ -357,20 +345,20 @@ export class PaissaCommand extends BaseCommand {
         district.id === districtFilter
       );
       activeFilters.push(
-        TextOutputBuilder.getDistrictWithEmoji(district?.name),
+        TextOutputBuilder.builDistrictWithEmoji(district?.name),
       );
     }
     if (sizeFilter !== null) {
-      activeFilters.push(TextOutputBuilder.getSizeWithEmoji(sizeFilter));
+      activeFilters.push(TextOutputBuilder.buildSizeWithEmoji(sizeFilter));
     }
     if (lotteryPhaseFilter !== null) {
       activeFilters.push(
-        TextOutputBuilder.getLotteryPhaseWithEmoji(lotteryPhaseFilter),
+        TextOutputBuilder.buildLotteryPhaseWithEmoji(lotteryPhaseFilter),
       );
     }
     if (allowedTenantsFilter !== null) {
       activeFilters.push(
-        TextOutputBuilder.getAllowedTenantsWithEmoji(allowedTenantsFilter),
+        TextOutputBuilder.buildAllowedTenantsWithEmoji(allowedTenantsFilter),
       );
     }
 
@@ -385,26 +373,35 @@ export class PaissaCommand extends BaseCommand {
       }
     }
 
+    const paissaDbUrl = PaissaDbUrlBuilder.buildUrl(
+      worldDetail.id,
+      districtFilter,
+      sizeFilter,
+      lotteryPhaseFilter,
+      allowedTenantsFilter,
+    );
+
     const embed = new EmbedBuilder()
       .setTitle(title)
+      .setURL(paissaDbUrl)
       .setDescription(description)
       .setColor(ColorHelper.getEmbedColor());
 
     if (currentPlots.length > 0) {
       currentPlots.forEach((plot: PlotWithDistrict) => {
         embed.addFields({
-          name: TextOutputBuilder.getFieldName(plot),
+          name: TextOutputBuilder.buildFieldName(plot),
           value: [
-            TextOutputBuilder.getDistrictWithEmoji(plot.districtName),
-            TextOutputBuilder.getSizeWithEmoji(plot.size),
-            TextOutputBuilder.getPriceWithEmoji(plot.price),
-            TextOutputBuilder.getEntries(plot),
-            TextOutputBuilder.getLotteryPhaseWithEmojiByPlot(plot),
-            TextOutputBuilder.getAllowedTenantsWithEmoji(
+            TextOutputBuilder.builDistrictWithEmoji(plot.districtName),
+            TextOutputBuilder.buildSizeWithEmoji(plot.size),
+            TextOutputBuilder.buildPriceWithEmoji(plot.price),
+            TextOutputBuilder.buildEntries(plot),
+            TextOutputBuilder.buildLotteryPhaseWithEmojiByPlot(plot),
+            TextOutputBuilder.buildAllowedTenantsWithEmoji(
               plot.purchase_system,
             ),
-            TextOutputBuilder.getLastUpdatedWithEmoji(plot),
-            TextOutputBuilder.getGameToraLinkWithEmoji(plot),
+            TextOutputBuilder.buildLastUpdatedWithEmoji(plot),
+            TextOutputBuilder.buildGameToraLinkWithEmoji(plot),
           ].join("\n"),
           inline: true,
         });

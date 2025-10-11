@@ -7,7 +7,7 @@ import { EmojiName } from "../types/EmojiName.ts";
 import { FilterPhase } from "../types/FilterPhase.ts";
 
 export class TextOutputBuilder {
-  static getAllowedTenantsWithEmoji(purchaseSystem: number): string {
+  static buildAllowedTenantsWithEmoji(purchaseSystem: number): string {
     if (
       (purchaseSystem &
         (PurchaseSystem.FREE_COMPANY | PurchaseSystem.INDIVIDUAL)) ==
@@ -26,18 +26,18 @@ export class TextOutputBuilder {
       " Individual";
   }
 
-  static getDistrict(districtName: string | null | undefined): string {
+  static buildDistrict(districtName: string | null | undefined): string {
     return districtName || "Unknown District";
   }
 
-  static getDistrictWithEmoji(
+  static builDistrictWithEmoji(
     districtName: string | null | undefined,
   ): string {
     return EmojiHelper.get(EmojiName.EMOJI_AETHERYTE) + " " +
-      this.getDistrict(districtName);
+      this.buildDistrict(districtName);
   }
 
-  static getEntries(plot: PlotWithDistrict): string {
+  static buildEntries(plot: PlotWithDistrict): string {
     const emoji = EmojiHelper.get(EmojiName.EMOJI_ENTRIES) + " ";
 
     if (!PlotValidationService.isLottery(plot)) {
@@ -53,11 +53,11 @@ export class TextOutputBuilder {
     return emoji + (plot.lotto_entries?.toString() ?? "0");
   }
 
-  static getFieldName(plot: PlotWithDistrict): string {
+  static buildFieldName(plot: PlotWithDistrict): string {
     return `Plot ${plot.plot_number + 1} (Ward ${plot.ward_number + 1})`;
   }
 
-  static getGameToraLinkWithEmoji(plot: PlotWithDistrict): string {
+  static buildGameToraLinkWithEmoji(plot: PlotWithDistrict): string {
     const plotUrl = GameToraUrlBuilder.buildPlotUrl(
       plot.districtId,
       plot.plot_number + 1,
@@ -66,12 +66,12 @@ export class TextOutputBuilder {
     return `[${emoji} View plot](${plotUrl})`;
   }
 
-  static getLastUpdatedWithEmoji(plot: PlotWithDistrict): string {
+  static buildLastUpdatedWithEmoji(plot: PlotWithDistrict): string {
     return EmojiHelper.get(EmojiName.EMOJI_LAST_UPDATED) +
       ` <t:${Math.floor(plot.last_updated_time)}:R>`;
   }
 
-  static getLotteryPhaseWithEmoji(phase: number | null | undefined): string {
+  static buildLotteryPhaseWithEmoji(phase: number | null | undefined): string {
     switch (phase) {
       case LottoPhase.ENTRY:
         return EmojiHelper.get(EmojiName.EMOJI_PHASE_ACCEPTING_ENTRIES) +
@@ -92,26 +92,26 @@ export class TextOutputBuilder {
     }
   }
 
-  static getLotteryPhaseWithEmojiByPlot(plot: PlotWithDistrict): string {
+  static buildLotteryPhaseWithEmojiByPlot(plot: PlotWithDistrict): string {
     if (!PlotValidationService.isLottery(plot)) {
-      return this.getLotteryPhaseWithEmoji(FilterPhase.FCFS);
+      return this.buildLotteryPhaseWithEmoji(FilterPhase.FCFS);
     }
 
     if (
       plot.lotto_phase === null || PlotValidationService.isOutdatedPhase(plot)
     ) {
-      return this.getLotteryPhaseWithEmoji(FilterPhase.MISSING_OUTDATED);
+      return this.buildLotteryPhaseWithEmoji(FilterPhase.MISSING_OUTDATED);
     }
 
-    return this.getLotteryPhaseWithEmoji(plot.lotto_phase);
+    return this.buildLotteryPhaseWithEmoji(plot.lotto_phase);
   }
 
-  static getPriceWithEmoji(price: number): string {
+  static buildPriceWithEmoji(price: number): string {
     return EmojiHelper.get(EmojiName.EMOJI_GIL) + " " +
       new Intl.NumberFormat("en-US").format(price);
   }
 
-  static getSizeWithEmoji(size: number): string {
+  static buildSizeWithEmoji(size: number): string {
     switch (size) {
       case HouseSize.SMALL:
         return EmojiHelper.get(EmojiName.EMOJI_SMALL) + " Small";
