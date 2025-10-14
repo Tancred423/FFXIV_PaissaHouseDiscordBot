@@ -2,6 +2,9 @@ FROM denoland/deno:2.5.3
 
 WORKDIR /app
 
+# Install SQLite3 library required by @db/sqlite
+RUN apt-get update && apt-get install -y libsqlite3-0 && rm -rf /var/lib/apt/lists/*
+
 # Copy the entire app
 COPY . .
 
