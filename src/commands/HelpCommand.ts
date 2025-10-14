@@ -1,23 +1,26 @@
 import {
-  APIEmbed,
   ChatInputCommandInteraction,
   EmbedBuilder,
-  JSONEncodable,
   SlashCommandBuilder,
 } from "discord.js";
 import { ColorHelper } from "../utils/ColorHelper.ts";
 import { BaseCommand } from "../types/BaseCommand.ts";
 
 export class HelpCommand extends BaseCommand {
-  readonly data = new SlashCommandBuilder()
-    .setName("help")
-    .setDescription("Get information about this bot and how to use it");
+  readonly data = this.createHelpCommandBuilder();
 
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-    await interaction.reply({ embeds: [this.createHelpEmbed()] });
+    const helpEmpbed = this.createHelpEmbed();
+    await interaction.reply({ embeds: [helpEmpbed] });
   }
 
-  private createHelpEmbed(): JSONEncodable<APIEmbed> {
+  private createHelpCommandBuilder(): SlashCommandBuilder {
+    return new SlashCommandBuilder()
+      .setName("help")
+      .setDescription("Get information about this bot and how to use it");
+  }
+
+  private createHelpEmbed(): EmbedBuilder {
     const deploymentHash = Deno.env.get("DEPLOYMENT_HASH");
     const embed = new EmbedBuilder()
       .setTitle("PaissaHouse")
@@ -76,6 +79,6 @@ export class HelpCommand extends BaseCommand {
       });
     }
 
-    return embed as JSONEncodable<APIEmbed>;
+    return embed;
   }
 }

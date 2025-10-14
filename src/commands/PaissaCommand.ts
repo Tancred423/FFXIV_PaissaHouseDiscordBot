@@ -18,7 +18,7 @@ import { WorldDataHelper } from "../utils/WorldDataHelper.ts";
 import { PaissaApiService } from "../services/PaissaApiService.ts";
 import { TextOutputBuilder } from "../utils/TextOutputBuilder.ts";
 import { PlotWithDistrict } from "../types/PlotWithDistrict.ts";
-import { logger } from "../utils/Logger.ts";
+import { Logger } from "../utils/Logger.ts";
 import { PaginationState } from "../types/PaginationState.ts";
 import {
   DistrictId,
@@ -44,21 +44,13 @@ export class PaissaCommand extends BaseCommand {
   readonly data = this.createPaissaCommandBuilder();
 
   async execute(interaction: ChatInputCommandInteraction): Promise<void> {
-    const worldId = parseInt(interaction.options.getString("world")!);
-    const districtIdString = interaction.options.getString("district");
-    const districtFilter = districtIdString ? parseInt(districtIdString) : null;
-    const sizeString = interaction.options.getString("size");
-    const sizeFilter = sizeString ? parseInt(sizeString) : null;
-    const lotteryPhaseString = interaction.options.getString("lottery-phase");
-    const lotteryPhaseFilter = lotteryPhaseString
-      ? parseInt(lotteryPhaseString)
-      : null;
-    const allowedTenantsString = interaction.options.getString(
-      "allowed-tenants",
-    );
-    const allowedTenantsFilter = allowedTenantsString
-      ? parseInt(allowedTenantsString)
-      : null;
+    const {
+      worldId,
+      districtFilter,
+      sizeFilter,
+      lotteryPhaseFilter,
+      allowedTenantsFilter,
+    } = this.parseOptions(interaction);
 
     await interaction.deferReply();
 
@@ -73,34 +65,17 @@ export class PaissaCommand extends BaseCommand {
     );
 
     if (!hasPagination) {
-      await interaction.editReply({
-        embeds: [embed as JSONEncodable<APIEmbed>],
-      });
+      await interaction.editReply({ embeds: [embed] });
       return;
     }
 
     const stateId = `${interaction.user.id}_${interaction.id}_${Date.now()}`;
     const totalPages = Math.ceil(totalPlots / PLOTS_PER_PAGE);
-
-    const allPlots: PlotWithDistrict[] = worldDetail.districts.flatMap((
-      district,
-    ) =>
-      district.open_plots.map((plot) => ({
-        ...plot,
-        districtId: district.id,
-        districtName: district.name,
-      }))
+    const filteredPlots = this.getFilteredPlots(
+      worldDetail,
+      districtFilter,
+      sizeFilter,
     );
-
-    let filteredPlots = allPlots;
-    if (districtFilter !== null) {
-      filteredPlots = filteredPlots.filter((plot) =>
-        plot.districtId === districtFilter
-      );
-    }
-    if (sizeFilter !== null) {
-      filteredPlots = filteredPlots.filter((plot) => plot.size === sizeFilter);
-    }
 
     paginationStates.set(stateId, {
       plots: filteredPlots,
@@ -115,7 +90,7 @@ export class PaissaCommand extends BaseCommand {
 
     const buttons = this.createPaginationButtons(0, totalPages);
     const message = await interaction.editReply({
-      embeds: [embed as JSONEncodable<APIEmbed>],
+      embeds: [embed],
       components: [buttons],
     });
 
@@ -223,21 +198,64 @@ export class PaissaCommand extends BaseCommand {
     return paissaBuilder;
   }
 
-  private getNextOrLatestPhaseChange(worldDetail: WorldDetail): number {
-    const now = Date.now() / 1000;
-    const allPlots = worldDetail.districts.flatMap((district) =>
-      district.open_plots
+  private parseOptions(interaction: ChatInputCommandInteraction): {
+    worldId: number;
+    districtFilter: number | null;
+    sizeFilter: number | null;
+    lotteryPhaseFilter: number | null;
+    allowedTenantsFilter: number | null;
+  } {
+    const worldId = parseInt(interaction.options.getString("world")!);
+    const districtIdString = interaction.options.getString("district");
+    const districtFilter = districtIdString ? parseInt(districtIdString) : null;
+    const sizeString = interaction.options.getString("size");
+    const sizeFilter = sizeString ? parseInt(sizeString) : null;
+    const lotteryPhaseString = interaction.options.getString("lottery-phase");
+    const lotteryPhaseFilter = lotteryPhaseString
+      ? parseInt(lotteryPhaseString)
+      : null;
+    const allowedTenantsString = interaction.options.getString(
+      "allowed-tenants",
     );
-    const sortedPhaseChangeTimes = allPlots
-      .map((plot) => plot.lotto_phase_until ?? 0)
-      .filter((time) => time > 0)
-      .sort((a, b) => a - b);
+    const allowedTenantsFilter = allowedTenantsString
+      ? parseInt(allowedTenantsString)
+      : null;
 
-    const nextPhaseChange = sortedPhaseChangeTimes.find((time) => time > now);
-    if (nextPhaseChange) {
-      return nextPhaseChange;
+    return {
+      worldId,
+      districtFilter,
+      sizeFilter,
+      lotteryPhaseFilter,
+      allowedTenantsFilter,
+    };
+  }
+
+  private getFilteredPlots(
+    worldDetail: WorldDetail,
+    districtFilter: number | null = null,
+    sizeFilter: number | null = null,
+  ): PlotWithDistrict[] {
+    const allPlots: PlotWithDistrict[] = worldDetail.districts.flatMap((
+      district,
+    ) =>
+      district.open_plots.map((plot) => ({
+        ...plot,
+        districtId: district.id,
+        districtName: district.name,
+      }))
+    );
+
+    let filteredPlots = allPlots;
+    if (districtFilter !== null) {
+      filteredPlots = filteredPlots.filter((plot) =>
+        plot.districtId === districtFilter
+      );
     }
-    return sortedPhaseChangeTimes[sortedPhaseChangeTimes.length - 1] ?? 0;
+    if (sizeFilter !== null) {
+      filteredPlots = filteredPlots.filter((plot) => plot.size === sizeFilter);
+    }
+
+    return filteredPlots;
   }
 
   private createHousingEmbed(
@@ -416,6 +434,23 @@ export class PaissaCommand extends BaseCommand {
     return { embed, hasPagination, totalPlots };
   }
 
+  private getNextOrLatestPhaseChange(worldDetail: WorldDetail): number {
+    const now = Date.now() / 1000;
+    const allPlots = worldDetail.districts.flatMap((district) =>
+      district.open_plots
+    );
+    const sortedPhaseChangeTimes = allPlots
+      .map((plot) => plot.lotto_phase_until ?? 0)
+      .filter((time) => time > 0)
+      .sort((a, b) => a - b);
+
+    const nextPhaseChange = sortedPhaseChangeTimes.find((time) => time > now);
+    if (nextPhaseChange) {
+      return nextPhaseChange;
+    }
+    return sortedPhaseChangeTimes[sortedPhaseChangeTimes.length - 1] ?? 0;
+  }
+
   private createPaginationButtons(
     currentPage: number,
     totalPages: number,
@@ -532,7 +567,7 @@ export class PaissaCommand extends BaseCommand {
             components: [buttons],
           });
         } catch (error: unknown) {
-          logger.error("COMMAND", "Error updating pagination", error);
+          Logger.error("COMMAND", "Error updating pagination", error);
         }
       } else {
         await buttonInteraction.deferUpdate();
@@ -561,7 +596,7 @@ export class PaissaCommand extends BaseCommand {
           });
         }
       } catch (error) {
-        logger.error("COMMAND", "Failed to remove pagination buttons", error);
+        Logger.error("COMMAND", "Failed to remove pagination buttons", error);
       }
     });
   }

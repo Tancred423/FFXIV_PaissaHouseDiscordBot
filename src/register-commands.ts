@@ -5,58 +5,66 @@ import {
 } from "discord.js";
 import { config } from "dotenv";
 import { BaseCommand } from "./types/BaseCommand.ts";
-import { logger } from "./utils/Logger.ts";
+import { Logger } from "./utils/Logger.ts";
 
 config();
 
-const commands: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
-
-try {
-  const commandDir = "./src/commands";
-  const entries = Array.from(Deno.readDirSync(commandDir));
-
-  for (const entry of entries) {
-    if (!entry.isFile || !entry.name.endsWith(".ts")) {
-      continue;
-    }
-
-    const fileName = entry.name;
-    const commandModule = await import(`./commands/${fileName}`);
-
-    const exportedClass = Object.values(commandModule).find(
-      (exported) => typeof exported === "function" && exported.prototype,
-    ) as new () => BaseCommand;
-
-    if (!exportedClass) {
-      logger.warn("STARTUP", `No class found in ${fileName}`);
-      continue;
-    }
-
-    const commandInstance = new exportedClass();
-    const command = commandInstance.toCommandObject();
-
-    if (!command && !("data" in command) && !("execute" in command)) {
-      logger.warn(
-        "STARTUP",
-        `The command at ${fileName} is missing a required "data" or "execute" property.`,
-      );
-      continue;
-    }
-
-    commands.push(
-      command.data
-        .toJSON() as RESTPostAPIChatInputApplicationCommandsJSONBody,
-    );
-  }
-} catch (error) {
-  logger.error("STARTUP", "Failed to read commands directory", error);
-}
-
+const commands = await collectCommands();
 const rest = new REST({ version: "10" }).setToken(
   Deno.env.get("DISCORD_BOT_TOKEN")!,
 );
+await applyCommandsToApplication();
 
-(async () => {
+async function collectCommands(): Promise<
+  RESTPostAPIChatInputApplicationCommandsJSONBody[]
+> {
+  const commands: RESTPostAPIChatInputApplicationCommandsJSONBody[] = [];
+
+  try {
+    const commandDir = "./src/commands";
+    const entries = Array.from(Deno.readDirSync(commandDir));
+
+    for (const entry of entries) {
+      if (!entry.isFile || !entry.name.endsWith(".ts")) {
+        continue;
+      }
+
+      const fileName = entry.name;
+      const commandModule = await import(`./commands/${fileName}`);
+
+      const exportedClass = Object.values(commandModule).find(
+        (exported) => typeof exported === "function" && exported.prototype,
+      ) as new () => BaseCommand;
+
+      if (!exportedClass) {
+        Logger.warn("STARTUP", `No class found in ${fileName}`);
+        continue;
+      }
+
+      const commandInstance = new exportedClass();
+      const command = commandInstance.toCommandObject();
+
+      if (!command && !("data" in command) && !("execute" in command)) {
+        Logger.warn(
+          "STARTUP",
+          `The command at ${fileName} is missing a required "data" or "execute" property.`,
+        );
+        continue;
+      }
+
+      commands.push(
+        command.data
+          .toJSON() as RESTPostAPIChatInputApplicationCommandsJSONBody,
+      );
+    }
+  } catch (error) {
+    Logger.error("STARTUP", "Failed to read commands directory", error);
+  }
+
+  return commands;
+}
+
+async function applyCommandsToApplication(): Promise<void> {
   try {
     const environment = Deno.env.get("ENVIRONMENT") || "development";
     const clientId = Deno.env.get("DISCORD_CLIENT_ID");
@@ -66,12 +74,12 @@ const rest = new REST({ version: "10" }).setToken(
     }
 
     if (environment === "production") {
-      logger.info("STARTUP", "Started refreshing global application commands");
+      Logger.info("STARTUP", "Started refreshing global application commands");
       await rest.put(
         Routes.applicationCommands(clientId),
         { body: commands },
       );
-      logger.info(
+      Logger.info(
         "STARTUP",
         "Successfully reloaded global application commands",
       );
@@ -85,7 +93,7 @@ const rest = new REST({ version: "10" }).setToken(
       );
     }
 
-    logger.info(
+    Logger.info(
       "STARTUP",
       `Started refreshing guild commands for guild ${guildId}`,
     );
@@ -93,8 +101,8 @@ const rest = new REST({ version: "10" }).setToken(
       Routes.applicationGuildCommands(clientId, guildId),
       { body: commands },
     );
-    logger.info("STARTUP", "Successfully reloaded guild commands");
+    Logger.info("STARTUP", "Successfully reloaded guild commands");
   } catch (error) {
-    logger.error("STARTUP", "Failed to register commands", error);
+    Logger.error("STARTUP", "Failed to register commands", error);
   }
-})();
+}

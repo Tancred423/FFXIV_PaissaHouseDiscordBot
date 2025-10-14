@@ -5,7 +5,8 @@ type LogCategory =
   | "COMMAND"
   | "SCHEDULER"
   | "CLEANUP"
-  | "SYSTEM";
+  | "SYSTEM"
+  | "PRESENCE";
 
 const COLORS = {
   reset: "\x1b[0m",
@@ -41,10 +42,11 @@ const CATEGORY_COLORS: Record<LogCategory, string> = {
   SCHEDULER: COLORS.yellow,
   CLEANUP: COLORS.magenta,
   SYSTEM: COLORS.white,
+  PRESENCE: COLORS.green,
 };
 
-class Logger {
-  private formatTimestamp(): string {
+export class Logger {
+  private static formatTimestamp(): string {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
@@ -56,7 +58,7 @@ class Logger {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
   }
 
-  private formatMessage(
+  private static formatMessage(
     level: LogLevel,
     category: LogCategory,
     message: string,
@@ -99,17 +101,27 @@ class Logger {
     return formatted;
   }
 
-  info(category: LogCategory, message: string, ...args: unknown[]): void {
+  static info(
+    category: LogCategory,
+    message: string,
+    ...args: unknown[]
+  ): void {
     console.log(this.formatMessage("INFO", category, message, ...args));
   }
 
-  warn(category: LogCategory, message: string, ...args: unknown[]): void {
+  static warn(
+    category: LogCategory,
+    message: string,
+    ...args: unknown[]
+  ): void {
     console.warn(this.formatMessage("WARN", category, message, ...args));
   }
 
-  error(category: LogCategory, message: string, ...args: unknown[]): void {
+  static error(
+    category: LogCategory,
+    message: string,
+    ...args: unknown[]
+  ): void {
     console.error(this.formatMessage("ERROR", category, message, ...args));
   }
 }
-
-export const logger = new Logger();

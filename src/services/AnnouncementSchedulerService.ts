@@ -5,7 +5,7 @@ import { WorldDataHelper } from "../utils/WorldDataHelper.ts";
 import { ColorHelper } from "../utils/ColorHelper.ts";
 import { LottoPhase } from "../types/ApiEnums.ts";
 import { PlotValidationService } from "../services/PlotValidationService.ts";
-import { logger } from "../utils/Logger.ts";
+import { Logger } from "../utils/Logger.ts";
 
 const CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
@@ -23,7 +23,7 @@ export class AnnouncementSchedulerService {
   }
 
   start(): void {
-    logger.info("SCHEDULER", "Starting announcement scheduler service...");
+    Logger.info("SCHEDULER", "Starting announcement scheduler service...");
     this.check();
     this.intervalId = setInterval(() => this.check(), CHECK_INTERVAL_MS);
 
@@ -47,7 +47,7 @@ export class AnnouncementSchedulerService {
 
   private async check(): Promise<void> {
     try {
-      logger.info("SCHEDULER", "Checking for phase change...");
+      Logger.info("SCHEDULER", "Checking for phase change...");
       const phaseInfo = await this.detectPhaseChange();
 
       if (phaseInfo.changed) {
@@ -55,9 +55,9 @@ export class AnnouncementSchedulerService {
         return;
       }
 
-      logger.info("SCHEDULER", "No phase change detected");
+      Logger.info("SCHEDULER", "No phase change detected");
     } catch (error) {
-      logger.error("SCHEDULER", "Error checking for phase change", error);
+      Logger.error("SCHEDULER", "Error checking for phase change", error);
     }
   }
 
@@ -111,7 +111,7 @@ export class AnnouncementSchedulerService {
           timeSincePhaseChange < PHASE_TRANSITION_WINDOW_MS / 1000;
 
         if (isWithinAnnouncementWindow) {
-          logger.info(
+          Logger.info(
             "SCHEDULER",
             `Phase change detected! Previous: ${this.lastPhase}, Current: ${currentPhase}`,
           );
@@ -126,7 +126,7 @@ export class AnnouncementSchedulerService {
 
       return { changed: false, phase: null };
     } catch (error) {
-      logger.error("SCHEDULER", "Error detecting phase change", error);
+      Logger.error("SCHEDULER", "Error detecting phase change", error);
       return { changed: false, phase: null };
     }
   }
@@ -159,7 +159,7 @@ export class AnnouncementSchedulerService {
           );
 
           if (!channel || !(channel instanceof TextChannel)) {
-            logger.warn(
+            Logger.warn(
               "SCHEDULER",
               `Channel ${settings.announcementChannelId} not found or not a text channel`,
             );
@@ -173,14 +173,14 @@ export class AnnouncementSchedulerService {
             .setColor(ColorHelper.getEmbedColor());
 
           await channel.send({ embeds: [embed] });
-          logger.info(
+          Logger.info(
             "SCHEDULER",
             `Sent ${
               phase === LottoPhase.ENTRY ? "ENTRY" : "RESULTS"
             } announcement to guild ${settings.guildId}`,
           );
         } catch (error) {
-          logger.error(
+          Logger.error(
             "SCHEDULER",
             `Error sending announcement to guild ${settings.guildId}`,
             error,
@@ -188,13 +188,13 @@ export class AnnouncementSchedulerService {
         }
       }
     } catch (error) {
-      logger.error("SCHEDULER", "Error in sendAnnouncements", error);
+      Logger.error("SCHEDULER", "Error in sendAnnouncements", error);
     }
   }
 
   private async cleanupDeadData(): Promise<void> {
     try {
-      logger.info(
+      Logger.info(
         "CLEANUP",
         "Running periodic cleanup of dead guild/channel data...",
       );
@@ -207,7 +207,7 @@ export class AnnouncementSchedulerService {
           if (!guild) {
             DatabaseService.removeAnnouncementChannel(settings.guildId);
             cleanedCount++;
-            logger.info(
+            Logger.info(
               "CLEANUP",
               `Cleaned up settings for non-existent guild ${settings.guildId}`,
             );
@@ -220,13 +220,13 @@ export class AnnouncementSchedulerService {
           if (!channel || !(channel instanceof TextChannel)) {
             DatabaseService.removeAnnouncementChannel(settings.guildId);
             cleanedCount++;
-            logger.info(
+            Logger.info(
               "CLEANUP",
               `Cleaned up settings for non-existent channel ${settings.announcementChannelId}`,
             );
           }
         } catch (error) {
-          logger.error(
+          Logger.error(
             "CLEANUP",
             `Failed to cleanup guild ${settings.guildId}`,
             error,
@@ -234,12 +234,12 @@ export class AnnouncementSchedulerService {
         }
       }
 
-      logger.info(
+      Logger.info(
         "CLEANUP",
         `Cleanup completed successfully with ${cleanedCount} entries removed`,
       );
     } catch (error) {
-      logger.error("CLEANUP", "Error in cleanupDeadData", error);
+      Logger.error("CLEANUP", "Error in cleanupDeadData", error);
     }
   }
 }
