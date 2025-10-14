@@ -9,13 +9,13 @@ COPY . .
 RUN echo '#!/bin/sh\n\
 if [ "$REGISTER_COMMANDS" = "true" ]; then\n\
   echo "Registering Discord commands..."\n\
-  deno run --allow-net --allow-env --allow-read src/register-commands.ts\n\
+  deno run --allow-net --allow-env --allow-read --allow-ffi --unstable-ffi src/register-commands.ts\n\
   echo "Command registration complete. Exiting."\n\
   exit 0\n\
 fi\n\
 \n\
 # Start the bot\n\
-exec deno run --allow-net --allow-env --allow-read src/main.ts\n\
+exec deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --unstable-ffi src/main.ts\n\
 ' > /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh && \
     deno cache --no-lock src/main.ts src/register-commands.ts
