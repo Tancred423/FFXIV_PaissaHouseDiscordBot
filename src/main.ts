@@ -70,7 +70,7 @@ client.once(Events.ClientReady, async () => {
 
   const presenceService = new PresenceService(client);
   await presenceService.updatePresence();
-  setInterval(() => presenceService.updatePresence, 60 * 60 * 1000);
+  setInterval(presenceService.updatePresence, 60 * 60 * 1000);
 
   const scheduler = new AnnouncementSchedulerService(client);
   scheduler.start();
