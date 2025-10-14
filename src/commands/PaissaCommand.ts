@@ -1,8 +1,6 @@
 import {
   ActionRowBuilder,
-  APIActionRowComponent,
   APIEmbed,
-  APIMessageActionRowComponent,
   ButtonBuilder,
   ButtonInteraction,
   ButtonStyle,
@@ -117,11 +115,7 @@ export class PaissaCommand extends BaseCommand {
     const buttons = this.createPaginationButtons(0, totalPages);
     const message = await interaction.editReply({
       embeds: [embed as JSONEncodable<APIEmbed>],
-      components: [
-        buttons as JSONEncodable<
-          APIActionRowComponent<APIMessageActionRowComponent>
-        >,
-      ],
+      components: [buttons],
     });
 
     this.cleanupExpiredStates();
@@ -534,11 +528,7 @@ export class PaissaCommand extends BaseCommand {
         try {
           await buttonInteraction.update({
             embeds: [embed as JSONEncodable<APIEmbed>],
-            components: [
-              buttons as JSONEncodable<
-                APIActionRowComponent<APIMessageActionRowComponent>
-              >,
-            ],
+            components: [buttons],
           });
         } catch (error: unknown) {
           console.error(error);

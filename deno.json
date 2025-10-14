@@ -1,11 +1,12 @@
 {
   "imports": {
-    "discord.js": "npm:discord.js@14.14.1",
-    "dotenv": "npm:dotenv@16.3.1"
+    "discord.js": "npm:discord.js@14.23.2",
+    "dotenv": "npm:dotenv@16.3.1",
+    "@db/sqlite": "jsr:@db/sqlite@0.12"
   },
   "tasks": {
-    "register": "deno run --allow-net --allow-env --allow-read src/register-commands.ts",
-    "start": "deno run --allow-net --allow-env --allow-read src/main.ts"
+    "register": "deno run --allow-net --allow-env --allow-read --allow-ffi --unstable-ffi src/register-commands.ts",
+    "start": "deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --unstable-ffi src/main.ts"
   },
   "compilerOptions": {
     "lib": ["deno.window"],

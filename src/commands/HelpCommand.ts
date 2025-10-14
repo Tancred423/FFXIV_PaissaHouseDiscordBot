@@ -52,6 +52,22 @@ export class HelpCommand extends BaseCommand {
             "The Discord slash command interface should guide you through this command with ease.",
           inline: false,
         },
+      )
+      .addFields(
+        {
+          name: "/announcement set [channel]",
+          value:
+            "Set a channel to receive automatic notifications when new housing lottery periods begin. Requires Manage Server permission.",
+          inline: false,
+        },
+      )
+      .addFields(
+        {
+          name: "/announcement remove",
+          value:
+            "Remove the announcement channel setting and stop receiving lottery notifications. Requires Manage Server permission.",
+          inline: false,
+        },
       );
 
     if (deploymentHash) {

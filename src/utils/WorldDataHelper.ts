@@ -107,4 +107,8 @@ export class WorldDataHelper {
   static getWorldsByDatacenter(datacenterName: string): WorldData[] {
     return WORLDS.filter((world) => world.datacenter_name === datacenterName);
   }
+
+  static getAllWorlds(): WorldData[] {
+    return WORLDS;
+  }
 }

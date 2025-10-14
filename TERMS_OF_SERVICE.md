@@ -1,6 +1,6 @@
 # Terms of Service
 
-**Last Updated: 2025/10/10**
+**Last Updated: 2025/10/14**
 
 ## 1. Acceptance of Terms
 
@@ -17,6 +17,9 @@ offers the following features:
 - `/help` - Provides information about the Bot and its usage
 - `/paissa` - Displays detailed housing information for specific districts and
   worlds
+- `/announcement set` - Configure a channel to receive notifications when new
+  housing lottery periods begin
+- `/announcement remove` - Remove the announcement channel configuration
 
 ## 3. User Responsibilities
 
@@ -35,7 +38,34 @@ You may not:
 - Use the Bot in a manner that could damage, disable, or impair the service
 - Attempt to gain unauthorized access to the Bot or its systems
 
-## 4. Third-Party Services
+## 4. Data Storage and Privacy
+
+### 4.1 Data We Store
+
+The Bot stores minimal server configuration data:
+
+- **Guild ID** - Your Discord server's unique identifier
+- **Channel ID** - The channel where announcements should be sent
+
+This data is only stored when you explicitly use the `/announcement set`
+command.
+
+### 4.2 Data Deletion
+
+Your data is automatically deleted when:
+
+- You use the `/announcement remove` command
+- The Bot is removed from your server
+- The configured channel is deleted
+
+The Bot also performs periodic cleanup to remove invalid data.
+
+### 4.3 Privacy
+
+For full privacy details, see our Privacy Policy. By using the Bot, you also
+agree to our Privacy Policy.
+
+## 5. Third-Party Services
 
 The Bot integrates with:
 
@@ -46,54 +76,62 @@ The Bot integrates with:
 These services have their own privacy policies and terms of service and are not
 affiliated with the Bot.
 
-## 5. Intellectual Property
+## 6. Intellectual Property
 
-### 5.1 Bot Code
+### 6.1 Bot Code
 
 The Bot is open source and available under the MIT License. The source code can
 be found at: https://github.com/Tancred423/FFXIV_PaissaHouseDiscordBot
 
-### 5.2 Third-Party Content
+### 6.2 Third-Party Content
 
 - Final Fantasy XIV is a trademark of Square Enix Co., Ltd.
 - The Bot is not affiliated with Square Enix, PaissaDB, or GameTora
 - All game-related content and trademarks belong to their respective owners
 
-## 6. Disclaimers and Limitations
+## 7. Disclaimers and Limitations
 
-### 6.1 Service Availability
+### 7.1 Service Availability
 
 - The Bot is provided "as is" without warranties of any kind
 - We do not guarantee uninterrupted service availability
 - The Bot may be temporarily unavailable for maintenance or updates
 
-### 6.2 Data Accuracy
+### 7.2 Data Accuracy
 
 - Housing data is user-contributed through PaissaDB and may vary from the actual
   in-game situation
 - The Bot is not responsible for data accuracy as it only displays information
   provided by PaissaDB
 
-## 7. Modifications and Updates
+### 7.3 Notification Accuracy
 
-### 7.1 Terms Updates
+- The Bot checks for new lottery periods periodically and may have delays
+- Notifications are based on data from PaissaDB and may not be instant
+- We do not guarantee notification delivery timing or accuracy
+- Technical issues may prevent notifications from being sent
+
+## 8. Modifications and Updates
+
+### 8.1 Terms Updates
 
 We reserve the right to modify these Terms at any time. Changes will be posted
 in this document with an updated "Last Updated" date. Continued use of the Bot
 constitutes acceptance of the modified Terms.
 
-### 7.2 Bot Updates
+### 8.2 Bot Updates
 
 The Bot may be updated to improve functionality, fix bugs, or add new features.
 Updates are automatic and do not require user action.
 
-## 8. Termination
+## 9. Termination
 
-### 8.1 User Termination
+### 9.1 User Termination
 
 You may stop using the Bot at any time by removing it from your Discord server.
+(Your data will be automatically deleted.)
 
-### 8.2 Service Termination
+### 9.2 Service Termination
 
 We reserve the right to:
 
@@ -101,24 +139,24 @@ We reserve the right to:
 - Block access to users who violate these Terms
 - Discontinue the service with reasonable notice
 
-## 9. Discord Integration
+## 10. Discord Integration
 
-### 9.1 Discord Terms Compliance
+### 10.1 Discord Terms Compliance
 
 This Bot operates within Discord's platform and is subject to Discord's Terms of
 Service. Users must comply with both Discord's Terms and these Terms.
 
-### 9.2 Required Permissions
+### 10.2 Required Permissions
 
 The Bot requires the following Discord permissions:
 
-- Create Slash Commands
-- Embed Links
-- Send Messages
-- Use External Emojis
-- View Channels
+- **Create Slash Commands** - To register and use commands
+- **Embed Links** - To display formatted housing information
+- **Send Messages** - To send announcements
+- **Use External Emojis** - To display housing-related icons
+- **View Channels** - To see configured channels
 
-## 10. Contact Information
+## 11. Contact Information
 
 For questions, concerns, or support regarding these Terms or the Bot:
 
@@ -126,12 +164,12 @@ For questions, concerns, or support regarding these Terms or the Bot:
   https://github.com/Tancred423/FFXIV_PaissaHouseDiscordBot/issues
 - **Developer**: Tancred (GitHub: @Tancred423)
 
-## 11. Governing Law
+## 12. Governing Law
 
 These Terms shall be governed by and construed in accordance with applicable
 laws, without regard to conflict of law principles.
 
-## 12. Severability
+## 13. Severability
 
 If any provision of these Terms is found to be unenforceable or invalid, the
 remaining provisions shall remain in full force and effect.

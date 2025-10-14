@@ -18,6 +18,7 @@ export class PaissaApiService {
       );
       throw new Error(`Failed to fetch world detail: ${response.statusText}`);
     }
+    console.log(`API request successful for world ID ${worldId}.`);
     return await response.json();
   }
 }
