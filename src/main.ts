@@ -3,6 +3,7 @@ import { config } from "dotenv";
 import { BaseCommand } from "./types/BaseCommand.ts";
 import { DatabaseService } from "./services/DatabaseService.ts";
 import { AnnouncementSchedulerService } from "./services/AnnouncementSchedulerService.ts";
+import { logger } from "./utils/Logger.ts";
 
 config();
 
@@ -42,7 +43,7 @@ async function loadCommands() {
         ) as new () => BaseCommand;
 
         if (!exportedClass) {
-          console.log(`[WARNING] No class found in ${fileName}`);
+          logger.warn("STARTUP", `No class found in ${fileName}`);
           continue;
         }
 
@@ -50,19 +51,20 @@ async function loadCommands() {
         const command = commandInstance.toCommandObject();
 
         if (!command || !("data" in command) || !("execute" in command)) {
-          console.log(
-            `[WARNING] The command at ${fileName} is missing a required "data" or "execute" property.`,
+          logger.warn(
+            "STARTUP",
+            `The command at ${fileName} is missing a required "data" or "execute" property.`,
           );
           continue;
         }
 
         commands.set(command.data.name, command);
       } catch (error) {
-        console.error(`[ERROR] Failed to load command ${fileName}:`, error);
+        logger.error("STARTUP", `Failed to load command ${fileName}`, error);
       }
     }
   } catch (error) {
-    console.error("[ERROR] Failed to read commands directory:", error);
+    logger.error("STARTUP", "Failed to read commands directory", error);
   }
 }
 
@@ -70,8 +72,9 @@ client.once(Events.ClientReady, async () => {
   DatabaseService.initialize();
   await loadCommands();
   setPresence();
-  console.log(
-    `Logged in as ${client.user?.tag} with ${commands.size} commands`,
+  logger.info(
+    "STARTUP",
+    `Discord initialized successfully as ${client.user?.tag} with ${commands.size} commands`,
   );
 
   const scheduler = new AnnouncementSchedulerService(client);
@@ -83,7 +86,8 @@ client.once(Events.ClientReady, async () => {
 client.on(Events.GuildDelete, (guild) => {
   const removed = DatabaseService.removeAnnouncementChannel(guild.id);
   if (removed) {
-    console.log(
+    logger.info(
+      "CLEANUP",
       `Cleaned up announcement settings for guild ${guild.id} (${guild.name})`,
     );
   }
@@ -96,7 +100,8 @@ client.on(Events.ChannelDelete, (channel) => {
     );
     if (storedChannelId === channel.id) {
       DatabaseService.removeAnnouncementChannel(channel.guildId);
-      console.log(
+      logger.info(
+        "CLEANUP",
         `Cleaned up announcement settings for deleted channel ${channel.id} in guild ${channel.guildId}`,
       );
     }
@@ -110,14 +115,14 @@ client.on(Events.InteractionCreate, async (interaction) => {
   const command = commands.get(commandName);
 
   if (!command) {
-    console.error(`No command matching ${commandName} was found.`);
+    logger.error("COMMAND", `No command matching ${commandName} was found.`);
     return;
   }
 
   try {
     await command.execute(interaction);
   } catch (error) {
-    console.error("Error handling command:", error);
+    logger.error("COMMAND", `Error handling command ${commandName}`, error);
 
     const errorMessage = error instanceof Error
       ? error.message
@@ -139,7 +144,7 @@ client.on(Events.InteractionCreate, async (interaction) => {
 
 const token = Deno.env.get("DISCORD_BOT_TOKEN");
 if (!token) {
-  console.error("DISCORD_BOT_TOKEN environment variable is required");
+  logger.error("STARTUP", "DISCORD_BOT_TOKEN environment variable is required");
   Deno.exit(1);
 }
 

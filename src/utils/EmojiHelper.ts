@@ -1,4 +1,5 @@
 import { EmojiName } from "../types/EmojiName.ts";
+import { logger } from "./Logger.ts";
 
 export class EmojiHelper {
   static get(name: EmojiName): string {
@@ -6,7 +7,7 @@ export class EmojiHelper {
     const emote = Deno.env.get(nameStr);
 
     if (!emote) {
-      console.error("Missing emoji with name " + name.toString());
+      logger.error("SYSTEM", `Missing emoji with name ${name.toString()}`);
     }
 
     return emote ?? "";

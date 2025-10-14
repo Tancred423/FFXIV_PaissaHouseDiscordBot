@@ -5,6 +5,7 @@ import {
 } from "discord.js";
 import { config } from "dotenv";
 import { BaseCommand } from "./types/BaseCommand.ts";
+import { logger } from "./utils/Logger.ts";
 
 config();
 
@@ -27,7 +28,7 @@ try {
     ) as new () => BaseCommand;
 
     if (!exportedClass) {
-      console.log(`[WARNING] No class found in ${fileName}`);
+      logger.warn("STARTUP", `No class found in ${fileName}`);
       continue;
     }
 
@@ -35,8 +36,9 @@ try {
     const command = commandInstance.toCommandObject();
 
     if (!command && !("data" in command) && !("execute" in command)) {
-      console.log(
-        `[WARNING] The command at ${fileName} is missing a required "data" or "execute" property.`,
+      logger.warn(
+        "STARTUP",
+        `The command at ${fileName} is missing a required "data" or "execute" property.`,
       );
       continue;
     }
@@ -47,7 +49,7 @@ try {
     );
   }
 } catch (error) {
-  console.error("[ERROR] Failed to read commands directory:", error);
+  logger.error("STARTUP", "Failed to read commands directory", error);
 }
 
 const rest = new REST({ version: "10" }).setToken(
@@ -64,12 +66,15 @@ const rest = new REST({ version: "10" }).setToken(
     }
 
     if (environment === "production") {
-      console.log("Started refreshing global application (/) commands.");
+      logger.info("STARTUP", "Started refreshing global application commands");
       await rest.put(
         Routes.applicationCommands(clientId),
         { body: commands },
       );
-      console.log("Successfully reloaded global application (/) commands.");
+      logger.info(
+        "STARTUP",
+        "Successfully reloaded global application commands",
+      );
       return;
     }
 
@@ -80,13 +85,16 @@ const rest = new REST({ version: "10" }).setToken(
       );
     }
 
-    console.log(`Started refreshing guild (/) commands for guild ${guildId}.`);
+    logger.info(
+      "STARTUP",
+      `Started refreshing guild commands for guild ${guildId}`,
+    );
     await rest.put(
       Routes.applicationGuildCommands(clientId, guildId),
       { body: commands },
     );
-    console.log("Successfully reloaded guild (/) commands.");
+    logger.info("STARTUP", "Successfully reloaded guild commands");
   } catch (error) {
-    console.error(error);
+    logger.error("STARTUP", "Failed to register commands", error);
   }
 })();

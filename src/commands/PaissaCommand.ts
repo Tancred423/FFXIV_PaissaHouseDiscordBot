@@ -18,6 +18,7 @@ import { WorldDataHelper } from "../utils/WorldDataHelper.ts";
 import { PaissaApiService } from "../services/PaissaApiService.ts";
 import { TextOutputBuilder } from "../utils/TextOutputBuilder.ts";
 import { PlotWithDistrict } from "../types/PlotWithDistrict.ts";
+import { logger } from "../utils/Logger.ts";
 import { PaginationState } from "../types/PaginationState.ts";
 import {
   DistrictId,
@@ -531,7 +532,7 @@ export class PaissaCommand extends BaseCommand {
             components: [buttons],
           });
         } catch (error: unknown) {
-          console.error(error);
+          logger.error("COMMAND", "Error updating pagination", error);
         }
       } else {
         await buttonInteraction.deferUpdate();
@@ -560,7 +561,7 @@ export class PaissaCommand extends BaseCommand {
           });
         }
       } catch (error) {
-        console.error("Failed to remove pagination buttons:", error);
+        logger.error("COMMAND", "Failed to remove pagination buttons", error);
       }
     });
   }

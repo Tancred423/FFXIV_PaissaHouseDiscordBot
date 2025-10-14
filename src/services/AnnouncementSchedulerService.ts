@@ -5,6 +5,7 @@ import { WorldDataHelper } from "../utils/WorldDataHelper.ts";
 import { ColorHelper } from "../utils/ColorHelper.ts";
 import { LottoPhase } from "../types/ApiEnums.ts";
 import { PlotValidationService } from "../services/PlotValidationService.ts";
+import { logger } from "../utils/Logger.ts";
 
 const CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
@@ -22,7 +23,7 @@ export class AnnouncementSchedulerService {
   }
 
   start(): void {
-    console.log("Starting announcement scheduler service...");
+    logger.info("SCHEDULER", "Starting announcement scheduler service...");
     this.check();
     this.intervalId = setInterval(() => this.check(), CHECK_INTERVAL_MS);
 
@@ -46,14 +47,17 @@ export class AnnouncementSchedulerService {
 
   private async check(): Promise<void> {
     try {
-      console.log("Checking for phase change...");
+      logger.info("SCHEDULER", "Checking for phase change...");
       const phaseInfo = await this.detectPhaseChange();
 
       if (phaseInfo.changed) {
         await this.sendAnnouncements(phaseInfo.phase);
+        return;
       }
+
+      logger.info("SCHEDULER", "No phase change detected");
     } catch (error) {
-      console.error("Error in announcement scheduler:", error);
+      logger.error("SCHEDULER", "Error checking for phase change", error);
     }
   }
 
@@ -107,7 +111,8 @@ export class AnnouncementSchedulerService {
           timeSincePhaseChange < PHASE_TRANSITION_WINDOW_MS / 1000;
 
         if (isWithinAnnouncementWindow) {
-          console.log(
+          logger.info(
+            "SCHEDULER",
             `Phase change detected! Previous: ${this.lastPhase}, Current: ${currentPhase}`,
           );
           this.lastPhaseEndTime = currentPhaseEndTime;
@@ -121,7 +126,7 @@ export class AnnouncementSchedulerService {
 
       return { changed: false, phase: null };
     } catch (error) {
-      console.error("Error in detectPhaseChange:", error);
+      logger.error("SCHEDULER", "Error detecting phase change", error);
       return { changed: false, phase: null };
     }
   }
@@ -154,7 +159,8 @@ export class AnnouncementSchedulerService {
           );
 
           if (!channel || !(channel instanceof TextChannel)) {
-            console.warn(
+            logger.warn(
+              "SCHEDULER",
               `Channel ${settings.announcementChannelId} not found or not a text channel`,
             );
             continue;
@@ -167,26 +173,31 @@ export class AnnouncementSchedulerService {
             .setColor(ColorHelper.getEmbedColor());
 
           await channel.send({ embeds: [embed] });
-          console.log(
+          logger.info(
+            "SCHEDULER",
             `Sent ${
               phase === LottoPhase.ENTRY ? "ENTRY" : "RESULTS"
-            } announcement to guild ${settings.guildId}, channel ${settings.announcementChannelId}`,
+            } announcement to guild ${settings.guildId}`,
           );
         } catch (error) {
-          console.error(
-            `Error sending announcement to guild ${settings.guildId}:`,
+          logger.error(
+            "SCHEDULER",
+            `Error sending announcement to guild ${settings.guildId}`,
             error,
           );
         }
       }
     } catch (error) {
-      console.error("Error in sendAnnouncements:", error);
+      logger.error("SCHEDULER", "Error in sendAnnouncements", error);
     }
   }
 
   private async cleanupDeadData(): Promise<void> {
     try {
-      console.log("Running periodic cleanup of dead guild/channel data...");
+      logger.info(
+        "CLEANUP",
+        "Running periodic cleanup of dead guild/channel data...",
+      );
       const guildSettings = DatabaseService.getAllGuildSettings();
       let cleanedCount = 0;
 
@@ -196,7 +207,8 @@ export class AnnouncementSchedulerService {
           if (!guild) {
             DatabaseService.removeAnnouncementChannel(settings.guildId);
             cleanedCount++;
-            console.log(
+            logger.info(
+              "CLEANUP",
               `Cleaned up settings for non-existent guild ${settings.guildId}`,
             );
             continue;
@@ -208,23 +220,26 @@ export class AnnouncementSchedulerService {
           if (!channel || !(channel instanceof TextChannel)) {
             DatabaseService.removeAnnouncementChannel(settings.guildId);
             cleanedCount++;
-            console.log(
-              `Cleaned up settings for non-existent channel ${settings.announcementChannelId} in guild ${settings.guildId}`,
+            logger.info(
+              "CLEANUP",
+              `Cleaned up settings for non-existent channel ${settings.announcementChannelId}`,
             );
           }
         } catch (error) {
-          console.error(
-            `Failed to check or execute cleanup for guild ${settings.guildId}`,
+          logger.error(
+            "CLEANUP",
+            `Failed to cleanup guild ${settings.guildId}`,
             error,
           );
         }
       }
 
-      console.log(
-        `Cleanup completed. Removed ${cleanedCount} dead entries out of ${guildSettings.length} total.`,
+      logger.info(
+        "CLEANUP",
+        `Cleanup completed successfully with ${cleanedCount} entries removed`,
       );
     } catch (error) {
-      console.error("Error in cleanupDeadData:", error);
+      logger.error("CLEANUP", "Error in cleanupDeadData", error);
     }
   }
 }

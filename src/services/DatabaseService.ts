@@ -1,4 +1,5 @@
 import { Database } from "@db/sqlite";
+import { logger } from "../utils/Logger.ts";
 
 export interface GuildSettings {
   guildId: string;
@@ -18,7 +19,7 @@ export class DatabaseService {
       )
     `);
 
-    console.log("Database initialized successfully");
+    logger.info("STARTUP", "Database initialized successfully");
   }
 
   static getDatabase(): Database {

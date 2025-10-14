@@ -1,4 +1,5 @@
 import { WorldDetail } from "../types/ApiTypes.ts";
+import { logger } from "../utils/Logger.ts";
 
 const API_BASE_URL = "https://paissadb.zhu.codes";
 
@@ -13,12 +14,13 @@ export class PaissaApiService {
       },
     });
     if (!response.ok) {
-      console.error(
-        `API request failed with status: ${response.status} - ${response.statusText}`,
+      logger.error(
+        "API",
+        `Failed to fetch world ${worldId}: ${response.status} - ${response.statusText}`,
       );
       throw new Error(`Failed to fetch world detail: ${response.statusText}`);
     }
-    console.log(`API request successful for world ID ${worldId}.`);
+    logger.info("API", `API request successful for world ID ${worldId}`);
     return await response.json();
   }
 }
