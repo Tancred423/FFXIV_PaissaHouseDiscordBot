@@ -71,11 +71,7 @@ client.once(Events.ClientReady, async () => {
 
   const presenceService = new PresenceService(client);
   await presenceService.updatePresence();
-  new Cron("0 * * * *", () => {
-    presenceService.updatePresence().catch((err) => {
-      Logger.error("PRESENCE", "Scheduled presence update failed", err);
-    });
-  });
+  new Cron("0 * * * *", presenceService.updatePresence);
 
   Logger.info(
     "STARTUP",

@@ -58,7 +58,6 @@ export class AnnouncementSchedulerService {
     try {
       Logger.info("SCHEDULER", "Scheduling next phase change announcement...");
 
-      // Get the current or latest lottery phase using the helper
       const phaseInfo = await LotteryPhaseHelper
         .getCurrentOrLatestLotteryPhase();
 
@@ -67,7 +66,6 @@ export class AnnouncementSchedulerService {
           "SCHEDULER",
           "No phase information available. Will retry in 1 hour",
         );
-        // If no phase info is available, try again in an hour
         setTimeout(
           () => this.schedulePhaseChangeAnnouncement(),
           60 * 60 * 1000,
@@ -75,13 +73,11 @@ export class AnnouncementSchedulerService {
         return;
       }
 
-      // If the phase isn't current, no need to schedule
       if (!phaseInfo.isCurrent) {
         Logger.info(
           "SCHEDULER",
           "No current phase running. Will retry in 1 hour",
         );
-        // Try again in an hour
         setTimeout(
           () => this.schedulePhaseChangeAnnouncement(),
           60 * 60 * 1000,
@@ -89,10 +85,8 @@ export class AnnouncementSchedulerService {
         return;
       }
 
-      // Calculate when to announce the next phase
       const phaseChangeTime = new Date(phaseInfo.until * 1000);
 
-      // Determine what the next phase will be
       const nextPhase = phaseInfo.phase === LottoPhase.ENTRY
         ? LottoPhase.RESULTS
         : LottoPhase.ENTRY;
@@ -104,26 +98,19 @@ export class AnnouncementSchedulerService {
         } at ${phaseChangeTime.toISOString()}`,
       );
 
-      // Store information about the next phase change
       this.nextPhaseChangeTime = phaseChangeTime;
       this.nextPhaseType = nextPhase;
 
-      // Clear existing cron job if it exists
       if (this.phaseCron) {
         this.phaseCron.stop();
       }
 
-      // Schedule the phase change announcement exactly at phase change time
       this.phaseCron = new Cron(phaseChangeTime, async () => {
         await this.sendAnnouncements(this.nextPhaseType!);
-
-        // After sending the announcement, schedule the next one
-        // Give a small delay to allow phase data to update
         setTimeout(() => this.schedulePhaseChangeAnnouncement(), 5 * 60 * 1000);
       });
     } catch (error) {
       Logger.error("SCHEDULER", "Error scheduling phase announcement", error);
-      // Try again in an hour if there's an error
       setTimeout(() => this.schedulePhaseChangeAnnouncement(), 60 * 60 * 1000);
     }
   }
