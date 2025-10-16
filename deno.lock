@@ -12,6 +12,7 @@
     "jsr:@std/path@0.217": "0.217.0",
     "jsr:@std/path@1": "1.1.2",
     "jsr:@std/path@^1.1.1": "1.1.2",
+    "npm:croner@8.0.0": "8.0.0",
     "npm:discord.js@14.23.2": "14.23.2",
     "npm:dotenv@16.3.1": "16.3.1"
   },
@@ -148,6 +149,9 @@
     "@vladfrangu/async_event_emitter@2.4.7": {
       "integrity": "sha512-Xfe6rpCTxSxfbswi/W/Pz7zp1WWSNn4A0eW4mLkQUewCrXXtMj31lCg+iQyTkh/CkusZSq9eDflu7tjEDXUY6g=="
     },
+    "croner@8.0.0": {
+      "integrity": "sha512-NhZ7wV9L0nxbSJKYp6u+OHCytFv4RlCu0O6GsglJIZMpMqmtb0kcNNPS5lv1O8qclhDA1NffLSsGx2ftbWQamw=="
+    },
     "discord-api-types@0.38.30": {
       "integrity": "sha512-KhAqlBrg+rVK+Ob7INMF5o63yW4/GUzRatG/AjyVsIO8lgcLyR8qCl2HokIVzWwmzkJYG0CEPXsKMOqau3E8NA=="
     },
@@ -203,6 +207,7 @@
   "workspace": {
     "dependencies": [
       "jsr:@db/sqlite@0.12",
+      "npm:croner@8.0.0",
       "npm:discord.js@14.23.2",
       "npm:dotenv@16.3.1"
     ]

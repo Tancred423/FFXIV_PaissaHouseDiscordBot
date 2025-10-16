@@ -111,4 +111,8 @@ export class WorldDataHelper {
   static getAllWorlds(): WorldData[] {
     return WORLDS;
   }
+
+  static getAdamantoiseWorldId(): number {
+    return 73;
+  }
 }

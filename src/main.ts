@@ -1,5 +1,6 @@
 import { Client, Events, GatewayIntentBits } from "discord.js";
 import { config } from "dotenv";
+import { Cron } from "croner";
 import { BaseCommand } from "./types/BaseCommand.ts";
 import { DatabaseService } from "./services/DatabaseService.ts";
 import { AnnouncementSchedulerService } from "./services/AnnouncementSchedulerService.ts";
@@ -70,7 +71,16 @@ client.once(Events.ClientReady, async () => {
 
   const presenceService = new PresenceService(client);
   await presenceService.updatePresence();
-  setInterval(presenceService.updatePresence, 60 * 60 * 1000);
+  new Cron("0 * * * *", () => {
+    presenceService.updatePresence().catch((err) => {
+      Logger.error("PRESENCE", "Scheduled presence update failed", err);
+    });
+  });
+
+  Logger.info(
+    "STARTUP",
+    "Presence update scheduled to run at the top of each hour",
+  );
 
   const scheduler = new AnnouncementSchedulerService(client);
   scheduler.start();

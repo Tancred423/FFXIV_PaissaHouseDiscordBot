@@ -1,10 +1,7 @@
 import { ActivityType, Client } from "discord.js";
-import { LottoPhase } from "../types/ApiEnums.ts";
-import { WorldDataHelper } from "../utils/WorldDataHelper.ts";
-import { PaissaApiService } from "./PaissaApiService.ts";
-import { PlotValidationService } from "./PlotValidationService.ts";
 import { Logger } from "../utils/Logger.ts";
-import { OpenPlotDetail } from "../types/ApiTypes.ts";
+import { LotteryPhase } from "../types/LotteryPhase.ts";
+import { LotteryPhaseHelper } from "../utils/LotteryPhaseHelper.ts";
 
 export class PresenceService {
   client: Client;
@@ -16,20 +13,16 @@ export class PresenceService {
 
   async updatePresence(): Promise<void> {
     try {
-      const plots = await this.getPlotsWithValidPhase();
+      const currentOrLatestPhase = await LotteryPhaseHelper
+        .getCurrentOrLatestLotteryPhase();
 
-      if (plots.length === 0) {
+      if (!currentOrLatestPhase) {
         this.setDefaultPresence();
         return;
       }
 
-      const plotWithFuturePhaseEndTime = this
-        .getFirstPlotWithFuturePhaseEndTime(plots);
-      const currentPhase = plotWithFuturePhaseEndTime.lotto_phase ?? null;
-      const currentPhaseEndTime =
-        plotWithFuturePhaseEndTime.lotto_phase_until ?? 0;
-
-      this.setPhasePresence(currentPhase, currentPhaseEndTime);
+      this.setPhasePresence(currentOrLatestPhase);
+      Logger.info("PRESENCE", "Presence updated successfully");
     } catch (error) {
       Logger.error("PRESENCE", "Failed to update presence", error);
       this.client.user?.setPresence({
@@ -40,40 +33,6 @@ export class PresenceService {
         status: "online",
       });
     }
-  }
-
-  private getFirstPlotWithFuturePhaseEndTime(
-    plots: OpenPlotDetail[],
-  ): OpenPlotDetail {
-    const now = Date.now() / 1000;
-    const validPlots = plots.filter((plot) => {
-      const phaseEndTime = plot.lotto_phase_until ?? 0;
-      return phaseEndTime > now;
-    });
-
-    return validPlots.length > 0 ? validPlots[0] : plots[0];
-  }
-
-  private async getPlotsWithValidPhase(): Promise<OpenPlotDetail[]> {
-    const allWorlds = WorldDataHelper.getAllWorlds();
-    const world = allWorlds[0];
-    const worldDetail = await PaissaApiService.fetchWorldDetail(world.id);
-
-    const allPlots = worldDetail.districts.flatMap((district) =>
-      district.open_plots
-    );
-
-    const lotteryPlots = allPlots.filter((plot) => {
-      if (!PlotValidationService.isLottery(plot)) return false;
-      if (PlotValidationService.isUnknownOrOutdatedPhase(plot)) return false;
-      if (
-        plot.lotto_phase !== LottoPhase.ENTRY &&
-        plot.lotto_phase !== LottoPhase.RESULTS
-      ) return false;
-      return true;
-    });
-
-    return lotteryPlots;
   }
 
   private setDefaultPresence(): void {
@@ -88,13 +47,8 @@ export class PresenceService {
     Logger.info("PRESENCE", "Presence updated to default (no lottery data)");
   }
 
-  private setPhasePresence(
-    currentPhase: number | null,
-    currentPhaseEndTime: number,
-  ): void {
-    const presenceName = currentPhase !== null && currentPhaseEndTime > 0
-      ? this.formatTimeUntil(currentPhaseEndTime, currentPhase)
-      : this.defaultPresenceText;
+  private setPhasePresence(currentOrLatestPhase: LotteryPhase): void {
+    const presenceName = this.formatTimeUntil(currentOrLatestPhase);
 
     this.client.user?.setPresence({
       activities: [{
@@ -103,31 +57,36 @@ export class PresenceService {
       }],
       status: "online",
     });
-    Logger.info("PRESENCE", "Presence updated successfully");
   }
 
-  private formatTimeUntil(
-    targetTime: number,
-    phase: LottoPhase | null,
-  ): string {
+  private formatTimeUntil(currentOrLatestPhase: LotteryPhase): string {
     const now = Date.now() / 1000;
-    const diff = targetTime - now;
+    const diff = currentOrLatestPhase.until - now;
+    const minutes = Math.floor(Math.abs(diff) / 60);
+    const timeString = this.buildTimeString(minutes);
 
-    if (diff <= 0) {
-      return "Phase ended";
+    if (!currentOrLatestPhase.isCurrent) {
+      return currentOrLatestPhase.phaseName + " ended " + timeString + " ago";
     }
 
-    const hours = Math.floor(diff / 3600);
+    return currentOrLatestPhase.phaseName + " ends in " + timeString;
+  }
 
-    let phaseName = "Phase";
-    if (phase === LottoPhase.ENTRY) {
-      phaseName = "Entry phase";
-    } else if (phase === LottoPhase.RESULTS) {
-      phaseName = "Results phase";
+  private buildTimeString(totalMinutes: number): string {
+    if (totalMinutes === 0) {
+      return "< 1 minute";
     }
 
-    return hours < 1
-      ? `${phaseName} ends in < 1h`
-      : `${phaseName} ends in ${hours}h`;
+    const days = Math.floor(totalMinutes / (60 * 24));
+    if (days > 0) {
+      return `${days} ${days === 1 ? "day" : "days"}`;
+    }
+
+    const hours = Math.floor(totalMinutes / 60);
+    if (hours > 0) {
+      return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+    }
+
+    return `${totalMinutes} ${totalMinutes === 1 ? "minute" : "minutes"}`;
   }
 }

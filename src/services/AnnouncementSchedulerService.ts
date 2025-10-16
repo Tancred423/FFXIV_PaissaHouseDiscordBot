@@ -1,22 +1,19 @@
 import { Client, EmbedBuilder, TextChannel } from "discord.js";
-import { DatabaseService } from "../services/DatabaseService.ts";
-import { PaissaApiService } from "../services/PaissaApiService.ts";
-import { WorldDataHelper } from "../utils/WorldDataHelper.ts";
+import { Cron } from "croner";
+import { DatabaseService } from "./DatabaseService.ts";
 import { ColorHelper } from "../utils/ColorHelper.ts";
 import { LottoPhase } from "../types/ApiEnums.ts";
-import { PlotValidationService } from "../services/PlotValidationService.ts";
 import { Logger } from "../utils/Logger.ts";
+import { LotteryPhaseHelper } from "../utils/LotteryPhaseHelper.ts";
 
-const CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 24 * 60 * 60 * 1000;
-const PHASE_TRANSITION_WINDOW_MS = 60 * 60 * 1000;
 
 export class AnnouncementSchedulerService {
   private client: Client;
-  private lastPhaseEndTime = 0;
-  private lastPhase: LottoPhase | null = null;
-  private intervalId?: number;
   private cleanupIntervalId?: number;
+  private phaseCron?: Cron;
+  private nextPhaseChangeTime?: Date;
+  private nextPhaseType?: LottoPhase;
 
   constructor(client: Client) {
     this.client = client;
@@ -24,9 +21,11 @@ export class AnnouncementSchedulerService {
 
   start(): void {
     Logger.info("SCHEDULER", "Starting announcement scheduler service...");
-    this.check();
-    this.intervalId = setInterval(() => this.check(), CHECK_INTERVAL_MS);
 
+    // Schedule immediate check for phase information
+    this.schedulePhaseChangeAnnouncement();
+
+    // Schedule daily cleanup
     this.cleanupDeadData();
     this.cleanupIntervalId = setInterval(
       () => this.cleanupDeadData(),
@@ -34,107 +33,107 @@ export class AnnouncementSchedulerService {
     );
   }
 
+  // Legacy method for compatibility
+  check(): void {
+    // This method is kept for backward compatibility
+    // It no longer does phase change detection
+    Logger.info("SCHEDULER", "Legacy check method called - no action taken");
+  }
+
   stop(): void {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-      this.intervalId = undefined;
+    // Clean up the cron job if it exists
+    if (this.phaseCron) {
+      this.phaseCron.stop();
+      this.phaseCron = undefined;
     }
+
+    // Clean up interval for data cleanup
     if (this.cleanupIntervalId) {
       clearInterval(this.cleanupIntervalId);
       this.cleanupIntervalId = undefined;
     }
   }
 
-  private async check(): Promise<void> {
+  private async schedulePhaseChangeAnnouncement(): Promise<void> {
     try {
-      Logger.info("SCHEDULER", "Checking for phase change...");
-      const phaseInfo = await this.detectPhaseChange();
+      Logger.info("SCHEDULER", "Scheduling next phase change announcement...");
 
-      if (phaseInfo.changed) {
-        await this.sendAnnouncements(phaseInfo.phase);
+      // Get the current or latest lottery phase using the helper
+      const phaseInfo = await LotteryPhaseHelper
+        .getCurrentOrLatestLotteryPhase();
+
+      if (!phaseInfo) {
+        Logger.warn(
+          "SCHEDULER",
+          "No phase information available. Will retry in 1 hour",
+        );
+        // If no phase info is available, try again in an hour
+        setTimeout(
+          () => this.schedulePhaseChangeAnnouncement(),
+          60 * 60 * 1000,
+        );
         return;
       }
 
-      Logger.info("SCHEDULER", "No phase change detected");
-    } catch (error) {
-      Logger.error("SCHEDULER", "Error checking for phase change", error);
-    }
-  }
+      // If the phase isn't current, no need to schedule
+      if (!phaseInfo.isCurrent) {
+        Logger.info(
+          "SCHEDULER",
+          "No current phase running. Will retry in 1 hour",
+        );
+        // Try again in an hour
+        setTimeout(
+          () => this.schedulePhaseChangeAnnouncement(),
+          60 * 60 * 1000,
+        );
+        return;
+      }
 
-  private async detectPhaseChange(): Promise<{
-    changed: boolean;
-    phase: LottoPhase | null;
-  }> {
-    try {
-      const allWorlds = WorldDataHelper.getAllWorlds();
-      const now = Date.now() / 1000;
+      // Calculate when to announce the next phase
+      const phaseChangeTime = new Date(phaseInfo.until * 1000);
 
-      const world = allWorlds[0];
-      const worldDetail = await PaissaApiService.fetchWorldDetail(world.id);
+      // Determine what the next phase will be
+      const nextPhase = phaseInfo.phase === LottoPhase.ENTRY
+        ? LottoPhase.RESULTS
+        : LottoPhase.ENTRY;
 
-      const allPlots = worldDetail.districts.flatMap((district) =>
-        district.open_plots
+      Logger.info(
+        "SCHEDULER",
+        `Scheduling announcement for phase ${
+          LottoPhase[nextPhase]
+        } at ${phaseChangeTime.toISOString()}`,
       );
 
-      const lotteryPlots = allPlots.filter((plot) => {
-        if (!PlotValidationService.isLottery(plot)) return false;
-        if (PlotValidationService.isUnknownOrOutdatedPhase(plot)) return false;
-        return true;
+      // Store information about the next phase change
+      this.nextPhaseChangeTime = phaseChangeTime;
+      this.nextPhaseType = nextPhase;
+
+      // Clear existing cron job if it exists
+      if (this.phaseCron) {
+        this.phaseCron.stop();
+      }
+
+      // Schedule the phase change announcement exactly at phase change time
+      this.phaseCron = new Cron(phaseChangeTime, async () => {
+        await this.sendAnnouncements(this.nextPhaseType!);
+
+        // After sending the announcement, schedule the next one
+        // Give a small delay to allow phase data to update
+        setTimeout(() => this.schedulePhaseChangeAnnouncement(), 5 * 60 * 1000);
       });
-
-      if (lotteryPlots.length === 0) {
-        return { changed: false, phase: null };
-      }
-
-      const firstPlot = lotteryPlots[0];
-      const currentPhase = firstPlot.lotto_phase;
-      const currentPhaseEndTime = firstPlot.lotto_phase_until ?? 0;
-
-      if (currentPhaseEndTime === 0) {
-        return { changed: false, phase: null };
-      }
-
-      if (this.lastPhaseEndTime === 0) {
-        this.lastPhaseEndTime = currentPhaseEndTime;
-        this.lastPhase = currentPhase ?? null;
-        return { changed: false, phase: null };
-      }
-
-      const phaseEndTimeChanged = Math.abs(
-        currentPhaseEndTime - this.lastPhaseEndTime,
-      ) > 60;
-      const phaseTypeChanged = currentPhase !== this.lastPhase;
-
-      if (phaseEndTimeChanged && phaseTypeChanged) {
-        const timeSincePhaseChange = now - (this.lastPhaseEndTime);
-        const isWithinAnnouncementWindow = timeSincePhaseChange >= 0 &&
-          timeSincePhaseChange < PHASE_TRANSITION_WINDOW_MS / 1000;
-
-        if (isWithinAnnouncementWindow) {
-          Logger.info(
-            "SCHEDULER",
-            `Phase change detected! Previous: ${this.lastPhase}, Current: ${currentPhase}`,
-          );
-          this.lastPhaseEndTime = currentPhaseEndTime;
-          this.lastPhase = currentPhase ?? null;
-          return { changed: true, phase: currentPhase ?? null };
-        }
-      }
-
-      this.lastPhaseEndTime = currentPhaseEndTime;
-      this.lastPhase = currentPhase ?? null;
-
-      return { changed: false, phase: null };
     } catch (error) {
-      Logger.error("SCHEDULER", "Error detecting phase change", error);
-      return { changed: false, phase: null };
+      Logger.error("SCHEDULER", "Error scheduling phase announcement", error);
+      // Try again in an hour if there's an error
+      setTimeout(() => this.schedulePhaseChangeAnnouncement(), 60 * 60 * 1000);
     }
   }
 
-  private async sendAnnouncements(phase: LottoPhase | null): Promise<void> {
-    if (phase === null) return;
-
+  private async sendAnnouncements(phase: LottoPhase): Promise<void> {
     try {
+      Logger.info(
+        "SCHEDULER",
+        `Sending announcements for phase ${LottoPhase[phase]}`,
+      );
       const guildSettings = DatabaseService.getAllGuildSettings();
 
       let title: string;
@@ -149,8 +148,15 @@ export class AnnouncementSchedulerService {
         description =
           "Lottery results are now available!\nCheck in-game to see if you won your plot.\n\nUse `/paissa` to see which plots will be available next.\n\nThe result phase typically lasts 4 days, but may vary due to maintenance or events.";
       } else {
+        Logger.warn(
+          "SCHEDULER",
+          `Unknown phase ${phase}, not sending announcements`,
+        );
         return;
       }
+
+      let successCount = 0;
+      let failureCount = 0;
 
       for (const settings of guildSettings) {
         try {
@@ -163,6 +169,7 @@ export class AnnouncementSchedulerService {
               "SCHEDULER",
               `Channel ${settings.announcementChannelId} not found or not a text channel`,
             );
+            failureCount++;
             continue;
           }
 
@@ -176,17 +183,24 @@ export class AnnouncementSchedulerService {
           Logger.info(
             "SCHEDULER",
             `Sent ${
-              phase === LottoPhase.ENTRY ? "ENTRY" : "RESULTS"
+              LottoPhase[phase]
             } announcement to guild ${settings.guildId}`,
           );
+          successCount++;
         } catch (error) {
           Logger.error(
             "SCHEDULER",
             `Error sending announcement to guild ${settings.guildId}`,
             error,
           );
+          failureCount++;
         }
       }
+
+      Logger.info(
+        "SCHEDULER",
+        `Announcements sent: ${successCount} successful, ${failureCount} failed`,
+      );
     } catch (error) {
       Logger.error("SCHEDULER", "Error in sendAnnouncements", error);
     }

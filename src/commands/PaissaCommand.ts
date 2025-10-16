@@ -31,6 +31,7 @@ import { WorldDetail } from "../types/ApiTypes.ts";
 import { BaseCommand } from "../types/BaseCommand.ts";
 import { FilterPhase } from "../types/FilterPhase.ts";
 import { PaissaDbUrlBuilder } from "../utils/PaissaDbUrlBuilder.ts";
+import { LotteryPhaseHelper } from "../utils/LotteryPhaseHelper.ts";
 
 const PLOTS_PER_PAGE = 9;
 const PAGINATION_TIMEOUT_MILLIS = 5 * 60 * 1000;
@@ -55,7 +56,7 @@ export class PaissaCommand extends BaseCommand {
     await interaction.deferReply();
 
     const worldDetail = await PaissaApiService.fetchWorldDetail(worldId);
-    const { embed, hasPagination, totalPlots } = this.createHousingEmbed(
+    const { embed, hasPagination, totalPlots } = await this.createHousingEmbed(
       worldDetail,
       districtFilter,
       sizeFilter,
@@ -258,14 +259,16 @@ export class PaissaCommand extends BaseCommand {
     return filteredPlots;
   }
 
-  private createHousingEmbed(
+  private async createHousingEmbed(
     worldDetail: WorldDetail,
     districtFilter: number | null,
     sizeFilter: number | null,
     lotteryPhaseFilter: number | null,
     allowedTenantsFilter: number | null,
     page: number = 0,
-  ): { embed: EmbedBuilder; hasPagination: boolean; totalPlots: number } {
+  ): Promise<
+    { embed: EmbedBuilder; hasPagination: boolean; totalPlots: number }
+  > {
     const allPlots: PlotWithDistrict[] = worldDetail.districts.flatMap((
       district,
     ) =>
@@ -336,20 +339,18 @@ export class PaissaCommand extends BaseCommand {
     let description =
       `Open plots: ${totalPlotsOnWorld} (Available: ${entryPhasePlots}${missingDataPlotsText})`;
 
-    const phaseChangeTime = this.getNextOrLatestPhaseChange(worldDetail);
-    if (phaseChangeTime > 0) {
-      const now = Date.now() / 1000;
-      if (phaseChangeTime > now) {
-        const discordTimestamp = Math.floor(phaseChangeTime);
-        description +=
-          `\nLottery phase ends: <t:${discordTimestamp}:F> (<t:${discordTimestamp}:R>)`;
-      } else {
-        const discordTimestamp = Math.floor(phaseChangeTime);
-        description +=
-          `\nLottery phase ended: <t:${discordTimestamp}:F> (<t:${discordTimestamp}:R>)`;
-      }
-    } else {
+    const currentOrLatestPhase = await LotteryPhaseHelper
+      .getCurrentOrLatestLotteryPhase(worldDetail);
+    if (!currentOrLatestPhase) {
       description += `\nLottery phase ends: Insufficient data`;
+    } else if (currentOrLatestPhase.isCurrent) {
+      const discordTimestamp = Math.floor(currentOrLatestPhase.until);
+      description +=
+        `\n${currentOrLatestPhase.phaseName} ends: <t:${discordTimestamp}:F> (<t:${discordTimestamp}:R>)`;
+    } else {
+      const discordTimestamp = Math.floor(currentOrLatestPhase.until);
+      description +=
+        `\n${currentOrLatestPhase.phaseName} ended: <t:${discordTimestamp}:F> (<t:${discordTimestamp}:R>)`;
     }
 
     const activeFilters: string[] = [];
@@ -551,7 +552,7 @@ export class PaissaCommand extends BaseCommand {
 
       if (newPage !== state.currentPage) {
         state.currentPage = newPage;
-        const { embed } = this.createHousingEmbed(
+        const { embed } = await this.createHousingEmbed(
           state.worldDetail,
           state.districtId,
           state.sizeFilter,
