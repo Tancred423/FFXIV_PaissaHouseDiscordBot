@@ -48,16 +48,38 @@ const CATEGORY_COLORS: Record<LogCategory, string> = {
 };
 
 export class Logger {
+  private static timezone: string = "UTC";
+
+  static setTimezone(timezone: string): void {
+    this.timezone = timezone;
+  }
+
+  static getTimezone(): string {
+    return this.timezone;
+  }
+
   private static formatTimestamp(): string {
     const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, "0");
-    const day = String(now.getDate()).padStart(2, "0");
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
-    const seconds = String(now.getSeconds()).padStart(2, "0");
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: this.timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+      timeZoneName: "shortOffset",
+    });
+
+    const parts = formatter.formatToParts(now);
+    const partsMap = Object.fromEntries(
+      parts.map((p) => [p.type, p.value]),
+    );
+
     const milliseconds = String(now.getMilliseconds()).padStart(3, "0");
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`;
+
+    return `${partsMap.year}-${partsMap.month}-${partsMap.day} ${partsMap.hour}:${partsMap.minute}:${partsMap.second}.${milliseconds} ${partsMap.timeZoneName}`;
   }
 
   private static formatMessage(

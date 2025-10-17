@@ -9,6 +9,9 @@ import { PresenceService } from "./services/PresenceService.ts";
 
 config();
 
+const logTimezone = Deno.env.get("LOG_TIMEZONE") || "UTC";
+Logger.setTimezone(logTimezone);
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,

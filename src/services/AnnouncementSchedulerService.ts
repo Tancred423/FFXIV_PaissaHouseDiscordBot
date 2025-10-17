@@ -79,13 +79,6 @@ export class AnnouncementSchedulerService {
         ? LottoPhase.RESULTS
         : LottoPhase.ENTRY;
 
-      Logger.info(
-        "SCHEDULER",
-        `Scheduling announcement for phase ${
-          LottoPhase[nextPhase]
-        } at ${phaseChangeTime.toISOString()}`,
-      );
-
       this.nextPhaseType = nextPhase;
 
       if (this.phaseCron) {
@@ -96,6 +89,13 @@ export class AnnouncementSchedulerService {
         await this.sendAnnouncements(this.nextPhaseType!);
         setTimeout(() => this.schedulePhaseChangeAnnouncement(), 5 * 60 * 1000);
       });
+
+      Logger.info(
+        "SCHEDULER",
+        `Scheduled announcement for phase ${
+          LottoPhase[nextPhase]
+        } at ${phaseChangeTime.toISOString()}`,
+      );
     } catch (error) {
       Logger.error("SCHEDULER", "Error scheduling phase announcement", error);
       setTimeout(() => this.schedulePhaseChangeAnnouncement(), 60 * 60 * 1000);
