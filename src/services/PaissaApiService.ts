@@ -1,10 +1,19 @@
 import { WorldDetail } from "../types/ApiTypes.ts";
 import { Logger } from "../utils/Logger.ts";
+import { CacheService } from "./CacheService.ts";
 
 const API_BASE_URL = "https://paissadb.zhu.codes";
+const CACHE_TTL_MS = 15 * 60 * 1000;
 
 export class PaissaApiService {
   static async fetchWorldDetail(worldId: number): Promise<WorldDetail> {
+    const cacheKey = `world_${worldId}`;
+
+    const cachedData = CacheService.get<WorldDetail>(cacheKey, CACHE_TTL_MS);
+    if (cachedData) {
+      return cachedData;
+    }
+
     const response = await fetch(`${API_BASE_URL}/worlds/${worldId}`, {
       headers: {
         "User-Agent":
@@ -23,6 +32,9 @@ export class PaissaApiService {
     }
 
     Logger.info("API", `API request successful for world ID ${worldId}`);
-    return await response.json();
+    const data = await response.json();
+
+    CacheService.set(cacheKey, data);
+    return data;
   }
 }

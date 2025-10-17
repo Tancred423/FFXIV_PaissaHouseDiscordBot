@@ -12,7 +12,6 @@ export class AnnouncementSchedulerService {
   private client: Client;
   private cleanupIntervalId?: number;
   private phaseCron?: Cron;
-  private nextPhaseChangeTime?: Date;
   private nextPhaseType?: LottoPhase;
 
   constructor(client: Client) {
@@ -22,10 +21,8 @@ export class AnnouncementSchedulerService {
   start(): void {
     Logger.info("SCHEDULER", "Starting announcement scheduler service...");
 
-    // Schedule immediate check for phase information
     this.schedulePhaseChangeAnnouncement();
 
-    // Schedule daily cleanup
     this.cleanupDeadData();
     this.cleanupIntervalId = setInterval(
       () => this.cleanupDeadData(),
@@ -33,21 +30,12 @@ export class AnnouncementSchedulerService {
     );
   }
 
-  // Legacy method for compatibility
-  check(): void {
-    // This method is kept for backward compatibility
-    // It no longer does phase change detection
-    Logger.info("SCHEDULER", "Legacy check method called - no action taken");
-  }
-
   stop(): void {
-    // Clean up the cron job if it exists
     if (this.phaseCron) {
       this.phaseCron.stop();
       this.phaseCron = undefined;
     }
 
-    // Clean up interval for data cleanup
     if (this.cleanupIntervalId) {
       clearInterval(this.cleanupIntervalId);
       this.cleanupIntervalId = undefined;
@@ -98,7 +86,6 @@ export class AnnouncementSchedulerService {
         } at ${phaseChangeTime.toISOString()}`,
       );
 
-      this.nextPhaseChangeTime = phaseChangeTime;
       this.nextPhaseType = nextPhase;
 
       if (this.phaseCron) {

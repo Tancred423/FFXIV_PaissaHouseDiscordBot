@@ -25,13 +25,6 @@ export class PresenceService {
       Logger.info("PRESENCE", "Presence updated successfully");
     } catch (error) {
       Logger.error("PRESENCE", "Failed to update presence", error);
-      this.client.user?.setPresence({
-        activities: [{
-          name: "/help, /paissa, /announcement",
-          type: ActivityType.Custom,
-        }],
-        status: "online",
-      });
     }
   }
 

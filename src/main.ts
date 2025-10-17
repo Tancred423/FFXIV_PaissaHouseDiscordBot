@@ -71,7 +71,7 @@ client.once(Events.ClientReady, async () => {
 
   const presenceService = new PresenceService(client);
   await presenceService.updatePresence();
-  new Cron("0 * * * *", presenceService.updatePresence);
+  new Cron("0 * * * *", () => presenceService.updatePresence());
 
   Logger.info(
     "STARTUP",
