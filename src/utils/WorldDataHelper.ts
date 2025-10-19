@@ -112,7 +112,7 @@ export class WorldDataHelper {
     return WORLDS;
   }
 
-  static getAdamantoiseWorldId(): number {
-    return 73;
+  static getDefaultWorldId(): number {
+    return 56; // Phoenix
   }
 }

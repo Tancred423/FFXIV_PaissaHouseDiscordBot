@@ -9,7 +9,7 @@ export class LotteryPhaseHelper {
     worldDetail: WorldDetail | null = null,
   ): Promise<LotteryPhase | null> {
     if (!worldDetail) {
-      const worldId = WorldDataHelper.getAdamantoiseWorldId();
+      const worldId = WorldDataHelper.getDefaultWorldId();
       worldDetail = await PaissaApiService.fetchWorldDetail(worldId);
     }
     const plotWithNextOrLatestPhaseChange = this
