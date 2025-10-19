@@ -58,23 +58,25 @@ jobs:
           script: |
             cd ~/paissa-bot
 
-            # Create db_volume directory if it doesn't exist
-            echo "Setting up database directory..."
-            mkdir -p db_volume
-            chmod -R 777 db_volume
+            # Check if volume exists and display info
+            echo "Checking Docker volume status:"
+            docker volume ls | grep paissa_data || echo "Volume doesn't exist yet"
 
-            # Backup database if it exists
-            if [ -f db_volume/paissa_bot.db ]; then
-              echo "Creating database backup..."
-              cp db_volume/paissa_bot.db db_volume/paissa_bot.db.bak.$(date +%Y%m%d%H%M%S)
-              echo "Database backup created"
+            # Create a backup container to backup the database if the volume exists
+            if docker volume ls | grep -q paissa_data; then
+              echo "Creating backup of database from volume..."
+              # Create a temporary container to access the volume and backup the database
+              docker run --rm -v paissa_data:/data -v $(pwd):/backup alpine sh -c '
+                if [ -f /data/paissa_bot.db ]; then
+                  cp /data/paissa_bot.db /backup/paissa_bot.db.bak.$(date +%Y%m%d%H%M%S)
+                  echo "Database backup created in host directory"
+                else
+                  echo "No database file found in volume"
+                fi
+              '
             else
-              echo "No existing database file found"
+              echo "No existing volume found, skipping backup"
             fi
-
-            # Display volume directory contents
-            echo "Current db_volume contents:"
-            ls -la db_volume
 
             # Stop and remove only the bot's containers
             docker-compose down
@@ -99,18 +101,20 @@ jobs:
             sleep 5
 
             # Check volume contents
-            echo "Volume directory contents after deployment:"
-            ls -la db_volume
+            echo "Volume contents after deployment:"
+            docker run --rm -v paissa_data:/data alpine ls -la /data
 
             # Show logs to check for database errors
             echo "Container logs (database related):"
             docker logs paissa-house-bot | grep -i "database\|db\|data dir\|system"
 
-            # Verify mounts are correct
-            echo "Checking container mounts:"
-            docker inspect paissa-house-bot --format '{{ .Mounts }}'
-
-            # Wait a bit more for database to be created if it doesn't exist yet
-            sleep 5
-            echo "Final check of database file:"
-            ls -la db_volume/paissa_bot.db || echo "WARNING: Database file still not found"
+            # Verify database file exists in volume
+            echo "Checking if database exists in volume:"
+            docker run --rm -v paissa_data:/data alpine sh -c '
+              if [ -f /data/paissa_bot.db ]; then
+                echo "Database file exists in volume"
+                ls -la /data/paissa_bot.db
+              else
+                echo "WARNING: Database file not found in volume"
+              fi
+            '
