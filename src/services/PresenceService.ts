@@ -66,10 +66,6 @@ export class PresenceService {
   }
 
   private buildTimeString(totalMinutes: number): string {
-    if (totalMinutes === 0) {
-      return "< 1 minute";
-    }
-
     const days = Math.floor(totalMinutes / (60 * 24));
     if (days > 0) {
       return `${days} ${days === 1 ? "day" : "days"}`;
