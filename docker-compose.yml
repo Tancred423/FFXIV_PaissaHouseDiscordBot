@@ -11,7 +11,7 @@ services:
       - REGISTER_COMMANDS=false
       - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-}
     volumes:
-      - paissa_data:/app/data
+      - ./db_volume:/app/data
 
   register-commands:
     image: ghcr.io/tancred423/paissa-house-discord-bot:latest
@@ -22,6 +22,4 @@ services:
       - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-}
     restart: "no"
 
-volumes:
-  paissa_data:
-    name: paissa_data
+# Using host-mounted volume instead of named volume
