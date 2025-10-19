@@ -57,16 +57,38 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             cd ~/paissa-bot
+            
+            # Important: Backup the database before doing anything else
+            mkdir -p data_backup
+            if [ -f "data/paissa_bot.db" ]; then
+              cp data/paissa_bot.db data_backup/
+              echo "Database backup created"
+            else
+              echo "No database file found to backup"
+            fi
+            
             # Ensure data directory exists with correct permissions
             mkdir -p data
             chmod 755 data
-            # Stop and remove only the bot's containers (but keep volumes)
+            
+            # Stop the containers but keep volumes
             docker-compose down
+            
             # Clean up any related dangling images without affecting other services
             docker image prune -f --filter "label=org.opencontainers.image.source=https://github.com/${{ vars.USERNAME_LOWERCASE }}/FFXIV_PaissaHouseDiscordBot"
+            
             # Pull the latest images
             docker-compose pull
-            # Register application commands (production mode for global commands)
-            DEPLOYMENT_HASH=${{ github.sha }} docker-compose run -e ENVIRONMENT=production register-commands
+            
+            # Restore database if needed
+            if [ -f "data_backup/paissa_bot.db" ] && [ ! -f "data/paissa_bot.db" ]; then
+              cp data_backup/paissa_bot.db data/
+              echo "Database restored from backup"
+            fi
+            
             # Start the containers with deployment hash for transparency
             DEPLOYMENT_HASH=${{ github.sha }} docker-compose up -d
+            
+            # Register commands after the main container is running
+            # sleep 5
+            # DEPLOYMENT_HASH=${{ github.sha }} docker-compose run --rm -e ENVIRONMENT=production register-commands
