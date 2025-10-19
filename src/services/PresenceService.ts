@@ -80,6 +80,6 @@ export class PresenceService {
       return `${hours} ${hours === 1 ? "hour" : "hours"}`;
     }
 
-    return `${totalMinutes} ${totalMinutes === 1 ? "minute" : "minutes"}`;
+    return "< 1 hour";
   }
 }
