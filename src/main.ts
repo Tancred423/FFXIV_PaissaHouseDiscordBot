@@ -12,6 +12,11 @@ config();
 const logTimezone = Deno.env.get("LOG_TIMEZONE") || "UTC";
 Logger.setTimezone(logTimezone);
 
+Logger.info(
+  "SYSTEM",
+  `Deployment hash: ${Deno.env.get("DEPLOYMENT_HASH") || "development"}`,
+);
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
