@@ -18,7 +18,7 @@ export class DatabaseService {
         Logger.error("STARTUP", "Error creating data directory:", error);
       }
     }
-    
+
     this.db = new Database("data/paissa_bot.db");
 
     this.db.exec(`

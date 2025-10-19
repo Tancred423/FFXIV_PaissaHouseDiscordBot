@@ -52,7 +52,8 @@ complete transparency between the published code and deployed bot.
 
 ### Development Setup
 
-For development, use the `docker-compose.dev.yml` file which builds from your local source code and enables hot reloading:
+For development, use the `docker-compose.dev.yml` file which builds from your
+local source code and enables hot reloading:
 
 1. **Build and start the development bot**:
    ```bash
@@ -67,7 +68,8 @@ For development, use the `docker-compose.dev.yml` file which builds from your lo
    ```
 
 3. **Hot reloading**:
-   - Changes to files in the `src` directory are automatically available in the container
+   - Changes to files in the `src` directory are automatically available in the
+     container
    - After significant changes, you may need to restart the service:
    ```bash
    docker-compose -f docker-compose.dev.yml restart bot
@@ -75,31 +77,42 @@ For development, use the `docker-compose.dev.yml` file which builds from your lo
 
 ### Production Setup
 
-For production, use the default `docker-compose.yml` file which uses the pre-built image from GitHub Container Registry:
+For production, use the default `docker-compose.yml` file which uses the
+pre-built image from GitHub Container Registry:
 
 1. **Update the GitHub registry link** (important for forked repositories):
-   - Open `docker-compose.yml` and modify the image path to point to your own registry:
+   - Open `docker-compose.yml` and modify the image path to point to your own
+     registry:
    ```yaml
    image: ghcr.io/your-username/paissa-house-discord-bot:latest
    ```
-   - The default image path (`ghcr.io/tancred423/paissa-house-discord-bot:latest`) is bound to the original repository owner's account.
-   - If you're using the original repository without publishing your own images, you can skip this step.
+   - The default image path
+     (`ghcr.io/tancred423/paissa-house-discord-bot:latest`) is bound to the
+     original repository owner's account.
+   - If you're using the original repository without publishing your own images,
+     you can skip this step.
 
 2. **Set up GitHub repository variables and secrets** (for CI/CD workflow):
-   - If you've forked this repository and want to use the GitHub Actions workflow, you need to set up:
-     
+   - If you've forked this repository and want to use the GitHub Actions
+     workflow, you need to set up:
+
      **Repository Variables:**
-     - Go to your repository on GitHub → Settings → Secrets and variables → Actions → Variables
-     - Create a new variable named `USERNAME_LOWERCASE` with your GitHub username in lowercase
+     - Go to your repository on GitHub → Settings → Secrets and variables →
+       Actions → Variables
+     - Create a new variable named `USERNAME_LOWERCASE` with your GitHub
+       username in lowercase
 
      **Repository Secrets:**
-     - Go to your repository on GitHub → Settings → Secrets and variables → Actions → Secrets
+     - Go to your repository on GitHub → Settings → Secrets and variables →
+       Actions → Secrets
      - Set up the following secrets for deployment:
        - `SERVER_HOST`: The hostname or IP of your deployment server
        - `SERVER_USERNAME`: The SSH username for your deployment server
-       - `DEPLOY_SSH_KEY`: The private SSH key for authentication with your server
-       
-   - These variables and secrets are used in the `.github/workflows/deploy.yml` file for building, pushing, and deploying the bot
+       - `DEPLOY_SSH_KEY`: The private SSH key for authentication with your
+         server
+
+   - These variables and secrets are used in the `.github/workflows/deploy.yml`
+     file for building, pushing, and deploying the bot
 
 3. **Start the production bot**:
    ```bash
