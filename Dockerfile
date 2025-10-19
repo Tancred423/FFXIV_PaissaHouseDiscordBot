@@ -2,12 +2,11 @@ FROM denoland/deno:2.5.3
 
 WORKDIR /app
 
-# Copy the entire app except data directory
 COPY . .
 
-# Create an entrypoint script, ensure data directory exists, and cache application files
-RUN mkdir -p /app/data && \
-    echo '#!/bin/sh\n\
+RUN echo '#!/bin/sh\n\
+mkdir -p /app/data\n\
+\n\
 if [ "$REGISTER_COMMANDS" = "true" ]; then\n\
   echo "Registering Discord commands..."\n\
   deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --unstable-ffi src/register-commands.ts\n\
@@ -15,7 +14,6 @@ if [ "$REGISTER_COMMANDS" = "true" ]; then\n\
   exit 0\n\
 fi\n\
 \n\
-# Start the bot\n\
 exec deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --unstable-ffi src/main.ts\n\
 ' > /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh && \

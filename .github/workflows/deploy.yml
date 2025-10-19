@@ -58,37 +58,24 @@ jobs:
           script: |
             cd ~/paissa-bot
 
-            # Important: Backup the database before doing anything else
+            echo "Backing up database from Docker volume..."
             mkdir -p data_backup
-            if [ -f "data/paissa_bot.db" ]; then
-              cp data/paissa_bot.db data_backup/
-              echo "Database backup created"
+
+            if docker volume inspect paissa-bot_paissa-bot-data >/dev/null 2>&1; then
+              docker run --rm \
+                -v paissa-bot_paissa-bot-data:/data:ro \
+                -v $(pwd)/data_backup:/backup \
+                alpine sh -c "if [ -f /data/paissa_bot.db ]; then cp /data/paissa_bot.db /backup/paissa_bot.db.$(date +%Y%m%d_%H%M%S) && echo 'Database backup created'; else echo 'No database file found'; fi"
             else
-              echo "No database file found to backup"
+              echo "Volume does not exist yet (first deployment)"
             fi
 
-            # Ensure data directory exists with correct permissions
-            mkdir -p data
-            chmod 755 data
-
-            # Stop the containers but keep volumes
             docker-compose down
 
-            # Clean up any related dangling images without affecting other services
             docker image prune -f --filter "label=org.opencontainers.image.source=https://github.com/${{ vars.USERNAME_LOWERCASE }}/FFXIV_PaissaHouseDiscordBot"
 
-            # Pull the latest images
             docker-compose pull
 
-            # Restore database if needed
-            if [ -f "data_backup/paissa_bot.db" ] && [ ! -f "data/paissa_bot.db" ]; then
-              cp data_backup/paissa_bot.db data/
-              echo "Database restored from backup"
-            fi
-
-            # Start the containers with deployment hash for transparency
             DEPLOYMENT_HASH=${{ github.sha }} docker-compose up -d
 
-            # Register commands after the main container is running
-            # sleep 5
-            # DEPLOYMENT_HASH=${{ github.sha }} docker-compose run --rm -e ENVIRONMENT=production register-commands
+            echo "Deployment complete. Database persists in Docker volume 'paissa-bot_paissa-bot-data'"

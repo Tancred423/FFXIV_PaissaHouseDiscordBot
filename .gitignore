@@ -1,2 +1,10 @@
+data/
+data_backup/
+*.db
+*.db-shm
+*.db-wal
 .env
-paissa_bot.db
+.env.local
+node_modules/
+*.log
+.DS_Store
