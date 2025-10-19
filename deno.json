@@ -3,9 +3,7 @@
     "discord.js": "npm:discord.js@14.23.2",
     "dotenv": "npm:dotenv@16.3.1",
     "@db/sqlite": "jsr:@db/sqlite@0.12",
-    "croner": "npm:croner@8.0.0",
-    "existsSync": "https://deno.land/std@0.210.0/fs/exists.ts",
-    "ensureDirSync": "https://deno.land/std@0.210.0/fs/ensure_dir.ts"
+    "croner": "npm:croner@8.0.0"
   },
   "tasks": {
     "register": "deno run --allow-net --allow-env --allow-read --allow-ffi --unstable-ffi src/register-commands.ts",

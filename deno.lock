@@ -204,11 +204,6 @@
       "integrity": "sha512-PEIGCY5tSlUt50cqyMXfCzX+oOPqN0vuGqWzbcJ2xvnkzkq46oOpz7dQaTDBdfICb4N14+GARUDw2XV2N4tvzg=="
     }
   },
-  "remote": {
-    "https://deno.land/std@0.210.0/fs/_get_file_info_type.ts": "9c92ff74f39bfba66b09faf9901af6a944cc71f014d9649e7d3e32eac4aeddfc",
-    "https://deno.land/std@0.210.0/fs/ensure_dir.ts": "f797d9bf39aa2a796923a62b0e10d864998cec396f4712f5c869f3d0d8a6bfd3",
-    "https://deno.land/std@0.210.0/fs/exists.ts": "da38bab3cd416131a2075c1a532c69b0b634c2ce8d75222355aa6d3d15995199"
-  },
   "workspace": {
     "dependencies": [
       "jsr:@db/sqlite@0.12",

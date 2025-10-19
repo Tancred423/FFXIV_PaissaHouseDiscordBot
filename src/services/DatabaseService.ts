@@ -1,7 +1,5 @@
 import { Database } from "@db/sqlite";
 import { Logger } from "../utils/Logger.ts";
-import { existsSync } from "existsSync";
-import { ensureDirSync } from "ensureDirSync";
 
 export interface GuildSettings {
   guildId: string;
@@ -12,10 +10,7 @@ export class DatabaseService {
   private static db: Database;
 
   static initialize(): void {
-    if (!existsSync("./data")) {
-      ensureDirSync("./data");
-    }
-    this.db = new Database("./data/paissa_bot.db");
+    this.db = new Database("paissa_bot.db");
 
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS guild_settings (

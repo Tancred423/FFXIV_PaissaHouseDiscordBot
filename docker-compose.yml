@@ -8,8 +8,6 @@ services:
     environment:
       - REGISTER_COMMANDS=false
       - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-}
-    volumes:
-      - ./data:/app/data
 
   register-commands:
     image: ghcr.io/tancred423/paissa-house-discord-bot:latest
@@ -19,5 +17,3 @@ services:
       - REGISTER_COMMANDS=true
       - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-}
     restart: "no"
-    volumes:
-      - ./data:/app/data
