@@ -1,3 +1,5 @@
+version: "3.8"
+
 services:
   bot:
     image: ghcr.io/tancred423/paissa-house-discord-bot:latest
@@ -9,7 +11,7 @@ services:
       - REGISTER_COMMANDS=false
       - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-}
     volumes:
-      - ${PWD}/data:/app/data
+      - paissa_data:/app/data
 
   register-commands:
     image: ghcr.io/tancred423/paissa-house-discord-bot:latest
@@ -19,3 +21,7 @@ services:
       - REGISTER_COMMANDS=true
       - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-}
     restart: "no"
+
+volumes:
+  paissa_data:
+    name: paissa_data

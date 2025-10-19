@@ -13,12 +13,6 @@ const logTimezone = Deno.env.get("LOG_TIMEZONE") || "UTC";
 Logger.setTimezone(logTimezone);
 
 // Log system information for debugging
-Logger.info(
-  "SYSTEM",
-  `Running as user: ${Deno.uid?.() ?? "unknown"} group: ${
-    Deno.gid?.() ?? "unknown"
-  }`,
-);
 Logger.info("SYSTEM", `Current directory: ${Deno.cwd()}`);
 Logger.info(
   "SYSTEM",

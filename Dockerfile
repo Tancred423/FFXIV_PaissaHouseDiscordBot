@@ -18,7 +18,7 @@ if [ "$REGISTER_COMMANDS" = "true" ]; then\n\
 fi\n\
 \n\
 # Start the bot\n\
-exec deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --unstable-ffi src/main.ts\n\
+exec deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --unstable-ffi --allow-sys src/main.ts\n\
 ' > /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh && \
     deno cache --no-lock src/main.ts src/register-commands.ts
