@@ -57,8 +57,8 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             cd ~/paissa-bot
-            # Stop and remove only the bot's containers
-            docker-compose down
+            # Stop containers but keep volumes (--volumes=false)
+            docker-compose down --volumes=false
             # Clean up any related dangling images without affecting other services
             docker image prune -f --filter "label=org.opencontainers.image.source=https://github.com/${{ vars.USERNAME_LOWERCASE }}/FFXIV_PaissaHouseDiscordBot"
             # Pull the latest images
