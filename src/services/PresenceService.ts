@@ -54,9 +54,8 @@ export class PresenceService {
 
   private formatTimeUntil(currentOrLatestPhase: LotteryPhase): string {
     const now = Date.now() / 1000;
-    const diff = currentOrLatestPhase.until - now;
-    const minutes = Math.floor(Math.abs(diff) / 60);
-    const timeString = this.buildTimeString(minutes);
+    const diffInSeconds = currentOrLatestPhase.until - now;
+    const timeString = this.buildTimeString(diffInSeconds);
 
     if (!currentOrLatestPhase.isCurrent) {
       return currentOrLatestPhase.phaseName + " ended " + timeString + " ago";
@@ -65,13 +64,13 @@ export class PresenceService {
     return currentOrLatestPhase.phaseName + " ends in " + timeString;
   }
 
-  private buildTimeString(totalMinutes: number): string {
-    const days = Math.floor(totalMinutes / (60 * 24));
+  private buildTimeString(totalSeconds: number): string {
+    const days = Math.round(totalSeconds / (60 * 60 * 24));
     if (days > 0) {
       return `${days} ${days === 1 ? "day" : "days"}`;
     }
 
-    const hours = Math.floor(totalMinutes / 60);
+    const hours = Math.floor(totalSeconds / (60 * 60));
     if (hours > 0) {
       return `${hours} ${hours === 1 ? "hour" : "hours"}`;
     }
