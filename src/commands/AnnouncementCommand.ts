@@ -20,10 +20,13 @@ export class AnnouncementCommand extends BaseCommand {
 
     switch (subcommand) {
       case "set":
-        this.handleSetSubcommand(interaction);
+        await this.handleSetSubcommand(interaction);
         break;
       case "remove":
-        this.handleRemoveSubcommand(interaction);
+        await this.handleRemoveSubcommand(interaction);
+        break;
+      case "view":
+        await this.handleViewSubcommand(interaction);
         break;
     }
   }
@@ -54,6 +57,11 @@ export class AnnouncementCommand extends BaseCommand {
         subcommand
           .setName("remove")
           .setDescription("Remove the announcement channel setting")
+      )
+      .addSubcommand((subcommand) =>
+        subcommand
+          .setName("view")
+          .setDescription("View the current announcement channel")
       ) as SlashCommandBuilder;
   }
 
@@ -84,6 +92,22 @@ export class AnnouncementCommand extends BaseCommand {
       hasBeenRemoved
         ? "Announcement channel setting has been removed.\nYou will no longer receive lottery notifications."
         : "There was already no announcement channel setting.",
+    );
+
+    await interaction.editReply({ embeds: [embed] });
+  }
+
+  private async handleViewSubcommand(
+    interaction: ChatInputCommandInteraction,
+  ): Promise<void> {
+    const announementChannelId = DatabaseService.getAnnouncementChannel(
+      interaction.guildId!,
+    );
+
+    const embed = StatusEmbedBuilder.getSuccessEmbed(
+      announementChannelId
+        ? `The current announcement channel is <#${announementChannelId}>.`
+        : "No announcement channel has been set.",
     );
 
     await interaction.editReply({ embeds: [embed] });
