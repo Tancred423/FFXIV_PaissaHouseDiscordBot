@@ -10,15 +10,7 @@ export class DatabaseService {
   private static db: Database;
 
   static initialize(): void {
-    try {
-      Deno.mkdirSync("./data", { recursive: true });
-    } catch (error) {
-      if (!(error instanceof Deno.errors.AlreadyExists)) {
-        Logger.error("STARTUP", "Failed to create data directory", error);
-      }
-    }
-
-    this.db = new Database("./data/paissa_bot.db");
+    this.db = new Database("paissa_bot.db");
 
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS guild_settings (
