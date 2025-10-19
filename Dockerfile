@@ -2,9 +2,6 @@ FROM denoland/deno:2.5.3
 
 WORKDIR /app
 
-# Create data directory with proper permissions
-RUN mkdir -p /app/data && chmod 777 /app/data
-
 # Copy the entire app
 COPY . .
 

@@ -10,75 +10,24 @@ export class DatabaseService {
   private static db: Database;
 
   static initialize(): void {
-    const dbPath = "/app/data/paissa_bot.db";
-    const dataDir = "/app/data";
-
-    Logger.info("STARTUP", `Initializing database at ${dbPath}`);
-
-    // Ensure the data directory exists and is writable
     try {
-      try {
-        const info = Deno.statSync(dataDir);
-        Logger.info(
-          "STARTUP",
-          `Data directory exists: ${dataDir}, isDirectory: ${info.isDirectory}`,
-        );
-      } catch (err) {
-        const error = err as Error;
-        Logger.warn("STARTUP", `Data directory check failed: ${error.message}`);
-        Deno.mkdirSync(dataDir, { recursive: true });
-        Logger.info("STARTUP", "Created data directory");
+      Deno.mkdirSync("./data", { recursive: true });
+    } catch (error) {
+      if (!(error instanceof Deno.errors.AlreadyExists)) {
+        Logger.error("STARTUP", "Failed to create data directory", error);
       }
-
-      // Test write permissions by creating a temporary file
-      const testPath = `${dataDir}/write_test.tmp`;
-      try {
-        Deno.writeTextFileSync(testPath, "test");
-        Deno.removeSync(testPath);
-        Logger.info("STARTUP", "Data directory is writable");
-      } catch (err) {
-        const error = err as Error;
-        Logger.error(
-          "STARTUP",
-          `Data directory is not writable: ${error.message}`,
-        );
-      }
-    } catch (err) {
-      const error = err as Error;
-      Logger.error(
-        "STARTUP",
-        `Failed to setup data directory: ${error.message}`,
-      );
     }
 
-    try {
-      this.db = new Database(dbPath);
+    this.db = new Database("./data/paissa_bot.db");
 
-      this.db.exec(`
-        CREATE TABLE IF NOT EXISTS guild_settings (
-          guild_id TEXT PRIMARY KEY,
-          announcement_channel_id TEXT NOT NULL
-        )
-      `);
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS guild_settings (
+        guild_id TEXT PRIMARY KEY,
+        announcement_channel_id TEXT NOT NULL
+      )
+    `);
 
-      // Test query to verify db is working
-      const result = this.db.prepare(
-        "SELECT count(*) as count FROM guild_settings",
-      ).get() as { count: number };
-      Logger.info(
-        "STARTUP",
-        `Database connection verified. Guild settings count: ${result.count}`,
-      );
-
-      Logger.info("STARTUP", "Database initialized successfully");
-    } catch (err) {
-      const error = err as Error;
-      Logger.error(
-        "STARTUP",
-        `Database initialization failed: ${error.message}`,
-      );
-      throw error; // Re-throw to ensure app doesn't start with broken DB
-    }
+    Logger.info("STARTUP", "Database initialized successfully");
   }
 
   static getDatabase(): Database {
