@@ -21,5 +21,3 @@ services:
     restart: "no"
     volumes:
       - ./data:/app/data
-    depends_on:
-      - bot
