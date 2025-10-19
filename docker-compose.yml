@@ -9,7 +9,7 @@ services:
       - REGISTER_COMMANDS=false
       - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-}
     volumes:
-      - paissa-bot-data:/app/data
+      - ./data:/app/data
 
   register-commands:
     image: ghcr.io/tancred423/paissa-house-discord-bot:latest
@@ -20,10 +20,6 @@ services:
       - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-}
     restart: "no"
     volumes:
-      - paissa-bot-data:/app/data
+      - ./data:/app/data
     depends_on:
       - bot
-
-volumes:
-  paissa-bot-data:
-    driver: local

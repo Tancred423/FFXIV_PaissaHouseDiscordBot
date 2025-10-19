@@ -1,11 +1,22 @@
-data/
-data_backup/
-*.db
-*.db-shm
-*.db-wal
+# Git
+.git
+.gitignore
+
+# Environment variables
 .env
-.env.local
-.git/
-.github/
-node_modules/
+.env.*
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Logs
+logs
 *.log
+
+# Deno
+.deno
+
+# IDE files
+.vscode
+.idea
