@@ -12,29 +12,10 @@ export class DatabaseService {
   private static db: Database;
 
   static initialize(): void {
-    const dbPath = "./data/paissa_bot.db";
-    const dataDir = "./data";
-
-    Logger.info("STARTUP", `Initializing database at: ${dbPath}`);
-    Logger.info("STARTUP", `Working directory: ${Deno.cwd()}`);
-
-    if (!existsSync(dataDir)) {
-      Logger.info(
-        "STARTUP",
-        `Data directory does not exist, creating: ${dataDir}`,
-      );
-      ensureDirSync(dataDir);
-    } else {
-      Logger.info("STARTUP", `Data directory exists: ${dataDir}`);
+    if (!existsSync("./data")) {
+      ensureDirSync("./data");
     }
-
-    const dbExists = existsSync(dbPath);
-    Logger.info(
-      "STARTUP",
-      `Database file ${dbExists ? "exists" : "does not exist"}`,
-    );
-
-    this.db = new Database(dbPath);
+    this.db = new Database("./data/paissa_bot.db");
 
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS guild_settings (
@@ -43,16 +24,7 @@ export class DatabaseService {
       )
     `);
 
-    const stmt = this.db.prepare(
-      `SELECT COUNT(*) as count FROM guild_settings`,
-    );
-    const result = stmt.get() as { count: number };
-    stmt.finalize();
-
-    Logger.info(
-      "STARTUP",
-      `Database initialized successfully. Existing guild settings: ${result.count}`,
-    );
+    Logger.info("STARTUP", "Database initialized successfully");
   }
 
   static getDatabase(): Database {

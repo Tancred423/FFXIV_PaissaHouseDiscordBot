@@ -26,6 +26,4 @@ services:
 
 volumes:
   paissa-bot-data:
-    name: paissa-bot-data
-    external: false
     driver: local
