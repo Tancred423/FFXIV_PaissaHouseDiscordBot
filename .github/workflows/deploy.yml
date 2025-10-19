@@ -58,8 +58,19 @@ jobs:
           script: |
             cd ~/paissa-bot
 
-            # Create data directory if it doesn't exist
+            # Show data directory status before deployment
+            echo "Data directory contents before deployment:"
+            ls -la ./data || echo "Data directory doesn't exist yet"
+
+            # Create data directory if it doesn't exist and set proper permissions
             mkdir -p ./data
+            chmod -R 777 ./data
+
+            # Backup existing database if it exists
+            if [ -f ./data/paissa_bot.db ]; then
+              cp ./data/paissa_bot.db ./data/paissa_bot.db.bak.$(date +%Y%m%d%H%M%S)
+              echo "Database backup created"
+            fi
 
             # Stop and remove only the bot's containers
             docker-compose down
@@ -74,7 +85,18 @@ jobs:
             DEPLOYMENT_HASH=${{ github.sha }} docker-compose run -e ENVIRONMENT=production register-commands
 
             # Start the containers with deployment hash for transparency
-            DEPLOYMENT_HASH=${{ github.sha }} docker-compose up -d
+            DEPLOYMENT_HASH=${{ github.sha }} docker-compose up -d bot
 
-            # Ensure proper permissions on the data directory
-            chmod -R 755 ./data
+            # Show container info and check volumes
+            echo "Container info:"
+            docker inspect paissa-house-bot | grep -A 10 "Mounts"
+
+            # Wait a bit for container to start up
+            sleep 5
+
+            # Check data directory contents after deployment
+            echo "Data directory contents after deployment:"
+            ls -la ./data
+
+            # Show logs to check for database errors
+            docker logs paissa-house-bot | grep -i "database\|db\|data dir"

@@ -12,6 +12,64 @@ config();
 const logTimezone = Deno.env.get("LOG_TIMEZONE") || "UTC";
 Logger.setTimezone(logTimezone);
 
+// Log system information for debugging
+Logger.info(
+  "SYSTEM",
+  `Running as user: ${Deno.uid?.() ?? "unknown"} group: ${
+    Deno.gid?.() ?? "unknown"
+  }`,
+);
+Logger.info("SYSTEM", `Current directory: ${Deno.cwd()}`);
+Logger.info(
+  "SYSTEM",
+  `Deployment hash: ${Deno.env.get("DEPLOYMENT_HASH") || "development"}`,
+);
+
+// Check data directory accessibility
+try {
+  const dataDir = "/app/data";
+  try {
+    const stat = Deno.statSync(dataDir);
+    Logger.info(
+      "SYSTEM",
+      `Data directory exists: ${stat.isDirectory}, size: ${stat.size}, modified: ${stat.mtime}`,
+    );
+  } catch (err) {
+    Logger.warn(
+      "SYSTEM",
+      `Data directory does not exist yet: ${(err as Error).message}`,
+    );
+    Deno.mkdirSync(dataDir, { recursive: true });
+    Logger.info("SYSTEM", `Created data directory: ${dataDir}`);
+  }
+
+  // List all files in the current directory and data directory
+  Logger.info("SYSTEM", "Files in current directory:");
+  for (const entry of Deno.readDirSync(".")) {
+    Logger.info(
+      "SYSTEM",
+      `  ${entry.name} ${entry.isDirectory ? "[DIR]" : "[FILE]"}`,
+    );
+  }
+
+  Logger.info("SYSTEM", "Files in data directory:");
+  try {
+    for (const entry of Deno.readDirSync(dataDir)) {
+      Logger.info(
+        "SYSTEM",
+        `  ${entry.name} ${entry.isDirectory ? "[DIR]" : "[FILE]"}`,
+      );
+    }
+  } catch (err) {
+    Logger.error(
+      "SYSTEM",
+      `Cannot list data directory: ${(err as Error).message}`,
+    );
+  }
+} catch (err) {
+  Logger.error("SYSTEM", `File system check failed: ${(err as Error).message}`);
+}
+
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
