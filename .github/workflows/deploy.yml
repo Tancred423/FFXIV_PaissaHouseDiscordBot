@@ -58,24 +58,62 @@ jobs:
           script: |
             cd ~/paissa-bot
 
-            echo "Backing up database from Docker volume..."
-            mkdir -p data_backup
-
-            if docker volume inspect paissa-bot_paissa-bot-data >/dev/null 2>&1; then
-              docker run --rm \
-                -v paissa-bot_paissa-bot-data:/data:ro \
-                -v $(pwd)/data_backup:/backup \
-                alpine sh -c "if [ -f /data/paissa_bot.db ]; then cp /data/paissa_bot.db /backup/paissa_bot.db.$(date +%Y%m%d_%H%M%S) && echo 'Database backup created'; else echo 'No database file found'; fi"
+            echo "=== Pre-deployment diagnostics ==="
+            echo "Checking for existing volume..."
+            if docker volume inspect paissa-bot-data >/dev/null 2>&1; then
+              echo "✓ Volume 'paissa-bot-data' exists"
+              echo "Volume contents:"
+              docker run --rm -v paissa-bot-data:/data:ro alpine ls -lah /data/ || echo "Volume is empty or error listing"
             else
-              echo "Volume does not exist yet (first deployment)"
+              echo "⚠ Volume 'paissa-bot-data' does not exist - will be created"
             fi
 
+            echo ""
+            echo "=== Backing up database ==="
+            mkdir -p data_backup
+            if docker volume inspect paissa-bot-data >/dev/null 2>&1; then
+              BACKUP_FILE="paissa_bot.db.$(date +%Y%m%d_%H%M%S)"
+              if docker run --rm -v paissa-bot-data:/data:ro -v $(pwd)/data_backup:/backup alpine sh -c "[ -f /data/paissa_bot.db ] && cp /data/paissa_bot.db /backup/$BACKUP_FILE && echo 'Database backed up to $BACKUP_FILE' || echo 'No database file to backup'"; then
+                echo "✓ Backup completed"
+              fi
+            fi
+
+            echo ""
+            echo "=== Stopping containers ==="
             docker-compose down
+            echo "✓ Containers stopped (volumes preserved)"
 
-            docker image prune -f --filter "label=org.opencontainers.image.source=https://github.com/${{ vars.USERNAME_LOWERCASE }}/FFXIV_PaissaHouseDiscordBot"
+            echo ""
+            echo "=== Removing ALL old bot images to ensure clean state ==="
+            docker images | grep paissa-house-discord-bot | awk '{print $3}' | xargs -r docker rmi -f 2>/dev/null || echo "No old images to remove"
+            docker image prune -f
 
+            echo ""
+            echo "=== Pulling latest images ==="
             docker-compose pull
 
+            echo ""
+            echo "=== Verifying image has no baked-in data ==="
+            docker run --rm ghcr.io/${{ vars.USERNAME_LOWERCASE }}/paissa-house-discord-bot:latest sh -c "ls -lah /app/data 2>/dev/null || echo '/app/data not in image (OK)'"
+            docker run --rm ghcr.io/${{ vars.USERNAME_LOWERCASE }}/paissa-house-discord-bot:latest find /app -name "*.db" 2>/dev/null | head -5 || echo "✓ No .db files in image"
+
+            echo ""
+            echo "=== Verifying volume before start ==="
+            if docker volume inspect paissa-bot-data >/dev/null 2>&1; then
+              echo "✓ Volume still exists after image pull"
+              docker run --rm -v paissa-bot-data:/data:ro alpine ls -lah /data/ || echo "Volume is empty"
+            fi
+
+            echo ""
+            echo "=== Starting containers ==="
             DEPLOYMENT_HASH=${{ github.sha }} docker-compose up -d
 
-            echo "Deployment complete. Database persists in Docker volume 'paissa-bot_paissa-bot-data'"
+            echo ""
+            echo "=== Post-deployment verification ==="
+            sleep 3
+            docker-compose ps
+            echo ""
+            echo "Volume info:"
+            docker volume inspect paissa-bot-data
+            echo ""
+            echo "✓ Deployment complete"
