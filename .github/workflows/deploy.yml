@@ -57,13 +57,24 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             cd ~/paissa-bot
+
+            # Create data directory if it doesn't exist
+            mkdir -p ./data
+
             # Stop and remove only the bot's containers
             docker-compose down
+
             # Clean up any related dangling images without affecting other services
             docker image prune -f --filter "label=org.opencontainers.image.source=https://github.com/${{ vars.USERNAME_LOWERCASE }}/FFXIV_PaissaHouseDiscordBot"
+
             # Pull the latest images
             docker-compose pull
+
             # Register application commands (production mode for global commands)
             DEPLOYMENT_HASH=${{ github.sha }} docker-compose run -e ENVIRONMENT=production register-commands
+
             # Start the containers with deployment hash for transparency
             DEPLOYMENT_HASH=${{ github.sha }} docker-compose up -d
+
+            # Ensure proper permissions on the data directory
+            chmod -R 755 ./data
