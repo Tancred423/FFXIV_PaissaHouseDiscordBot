@@ -24,10 +24,7 @@ exec deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --u
 ARG GIT_COMMIT_HASH=""
 ENV DEPLOYMENT_HASH="${GIT_COMMIT_HASH}"
 
-# Environment variables (these will be overridden at runtime)
-ENV DISCORD_BOT_TOKEN=""
-ENV DISCORD_CLIENT_ID=""
-ENV DISCORD_DEV_GUILD_ID=""
+# Non-sensitive environment variable defaults (sensitive vars like tokens are provided at runtime via --env-file)
 ENV EMBED_COLOR="0x86b26b"
 ENV ENVIRONMENT="production"
 ENV REGISTER_COMMANDS="false"
