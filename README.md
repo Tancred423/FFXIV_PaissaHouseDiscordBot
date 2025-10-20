@@ -68,71 +68,70 @@ that can be shared across multiple applications:
 2. **Create docker-compose.yml**:
    ```bash
    cat > docker-compose.yml << 'EOF'
-    services:
-      mysql:
-        image: mysql:8.0
-        container_name: mysql-server
-        restart: unless-stopped
-        environment:
-          MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-          MYSQL_DATABASE: paissa_bot
-          MYSQL_USER: ${MYSQL_USER}
-          MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-        ports:
-          - "127.0.0.1:3306:3306"
-        volumes:
-          - mysql_data:/var/lib/mysql
-        networks:
-          - mysql-network
-        command: --default-authentication-plugin=mysql_native_password
+   services:
+     mysql:
+       image: mysql:8.0
+       container_name: mysql-server
+       restart: unless-stopped
+       environment:
+         MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+         MYSQL_DATABASE: paissa_bot
+         MYSQL_USER: ${MYSQL_USER}
+         MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+       ports:
+         - "127.0.0.1:3306:3306"
+       volumes:
+         - mysql_data:/var/lib/mysql
+       networks:
+         - mysql-network
+       command: --default-authentication-plugin=mysql_native_password
 
-      phpmyadmin:
-        image: phpmyadmin:latest
-        container_name: phpmyadmin
-        restart: unless-stopped
-        environment:
-          PMA_HOST: mysql
-          PMA_PORT: 3306
-          PMA_ARBITRARY: 1
-        ports:
-          - "127.0.0.1:8082:80" # Might wanna change the port depending on your setup
-        networks:
-          - mysql-network
-        depends_on:
-          - mysql
+     phpmyadmin:
+       image: phpmyadmin:latest
+       container_name: phpmyadmin
+       restart: unless-stopped
+       environment:
+         PMA_HOST: mysql
+         PMA_PORT: 3306
+         PMA_ARBITRARY: 1
+       ports:
+         - "127.0.0.1:8082:80" # Might wanna change the port depending on your setup
+       networks:
+         - mysql-network
+       depends_on:
+         - mysql
 
-    volumes:
-      mysql_data:
-        name: mysql_data
+   volumes:
+     mysql_data:
+       name: mysql_data
 
-    networks:
-      mysql-network:
-        name: mysql-network
-        driver: bridge
-    EOF
+   networks:
+     mysql-network:
+       name: mysql-network
+       driver: bridge
+   EOF
    ```
 
 3. **Create .env file for MySQL**:
    ```bash
    cat > .env << 'EOF'
-    MYSQL_ROOT_PASSWORD=CHANGE_ME_STRONG_ROOT_PASSWORD
-    MYSQL_USER=paissa_user
-    MYSQL_PASSWORD=CHANGE_ME_STRONG_USER_PASSWORD
-    EOF
+   MYSQL_ROOT_PASSWORD=CHANGE_ME_STRONG_ROOT_PASSWORD
+   MYSQL_USER=paissa_user
+   MYSQL_PASSWORD=CHANGE_ME_STRONG_USER_PASSWORD
+   EOF
    ```
 
-3.1. Edit with strong passwords
+4. Edit with strong passwords
+   ```bash
+   nano .env
+   ```
 
-```bash
-nano .env
-```
-
-4. **Start MySQL server**:
+5. **Start MySQL server**:
    ```bash
    docker compose up -d
    ```
 
-5. **Access phpMyAdmin via SSH Tunnel**:
+6. **Access phpMyAdmin via SSH Tunnel**:
 
    phpMyAdmin is only accessible through an SSH tunnel, keeping it completely
    isolated from the internet for maximum security. On your local machine
