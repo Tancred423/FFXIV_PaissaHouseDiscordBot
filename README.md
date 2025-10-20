@@ -1,7 +1,11 @@
+<img align="left" width="80" height="80" src="https://zhu.codes/assets/PaissaLogo.c38c9420.png" alt="PaissaDB Logo">
+
 # FF14 Housing Discord Bot
 
 An unofficial Discord bot to display data from
 [PaissaDB](https://zhu.codes/paissa).
+
+![Results](https://filedn.eu/l1k9l7NzagvkkVpPyvEflCm/PaissaHouse/Results_Paginated.png)
 
 ## Add the bot to your server
 
