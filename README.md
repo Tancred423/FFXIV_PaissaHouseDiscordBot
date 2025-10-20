@@ -2,8 +2,8 @@
 
 # PaissaHouse
 
-An unofficial Discord bot for housing in Final Fantasy XIV (FFXIV, FF14) to display data from
-[PaissaDB](https://zhu.codes/paissa).
+An unofficial Discord bot for housing in Final Fantasy XIV (FFXIV, FF14) to
+display data from [PaissaDB](https://zhu.codes/paissa).
 
 <img height="600" src="https://filedn.eu/l1k9l7NzagvkkVpPyvEflCm/PaissaHouse/Results_Paginated.png" alt="PaissaDB Logo">
 
