@@ -114,11 +114,11 @@ export class AnnouncementSchedulerService {
       let description: string;
 
       if (phase === LottoPhase.ENTRY) {
-        title = "Entry Period started";
+        title = "Entry Phase started";
         description =
-          "The housing lottery entry period has started!\nYou can now place bids on available plots.\n\nUse `/paissa` to check available plots on your world.\n\nThe entry phase typically lasts 5 days, but may vary due to maintenance or events.";
+          "The housing lottery entry phase has started!\nYou can now place bids on available plots.\n\nUse `/paissa` to check available plots on your world.\n\nThe entry phase typically lasts 5 days, but may vary due to maintenance or events.";
       } else if (phase === LottoPhase.RESULTS) {
-        title = "Results Period started";
+        title = "Results Phase started";
         description =
           "Lottery results are now available!\nCheck in-game to see if you won your plot.\n\nUse `/paissa` to see which plots will be available next.\n\nThe result phase typically lasts 4 days, but may vary due to maintenance or events.";
       } else {

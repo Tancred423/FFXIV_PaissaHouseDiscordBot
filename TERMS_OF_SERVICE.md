@@ -17,9 +17,10 @@ offers the following features:
 - `/help` - Provides information about the Bot and its usage
 - `/paissa` - Displays detailed housing information for specific districts and
   worlds
-- `/announcement set` - Configure a channel to receive notifications when new
-  housing lottery periods begin
+- `/announcement set` - Configure a channel to receive notifications when new a
+  housing lottery phase begins
 - `/announcement remove` - Remove the announcement channel configuration
+- `/announcement view` - View the current announcement channel configuration
 
 ## 3. User Responsibilities
 
@@ -106,7 +107,6 @@ be found at: https://github.com/Tancred423/FFXIV_PaissaHouseDiscordBot
 
 ### 7.3 Notification Accuracy
 
-- The Bot checks for new lottery periods periodically and may have delays
 - Notifications are based on data from PaissaDB and may not be instant
 - We do not guarantee notification delivery timing or accuracy
 - Technical issues may prevent notifications from being sent

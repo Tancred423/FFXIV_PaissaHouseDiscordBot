@@ -40,8 +40,8 @@ The Bot provides housing information and notifications:
 - **Fetches housing data** from the PaissaDB API (public data)
 - **Formats and displays** the data in Discord
 - **Provides pagination** for large result sets (temporary, in-memory only)
-- **Sends notifications** to configured channels when new housing lottery
-  periods begin
+- **Sends notifications** to configured channels when new a housing lottery
+  phase begins
 
 ## 4. Why We Collect This Data
 
@@ -149,7 +149,8 @@ Here's what happens when you use `/announcement set`:
 1. **You select a channel** for announcements
 2. **Bot stores** your Guild ID and Channel ID in a local SQLite database
 3. **Bot confirms** the setting was saved
-4. **Bot sends notifications** to your chosen channel when lottery periods begin
+4. **Bot sends notifications** to your chosen channel when a lottery phase
+   begins
 
 ## 8. Third-Party Services
 

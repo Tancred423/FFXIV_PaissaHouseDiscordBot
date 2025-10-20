@@ -76,7 +76,7 @@ export class AnnouncementCommand extends BaseCommand {
     );
 
     const embed = StatusEmbedBuilder.getSuccessEmbed(
-      `Announcement channel has been set to <#${channel.id}>.\nYou will receive notifications when new housing lottery periods begin.`,
+      `Announcement channel has been set to <#${channel.id}>.\nYou will receive notifications when new housing lottery phase begin.`,
     );
     await interaction.editReply({ embeds: [embed] });
   }
