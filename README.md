@@ -16,7 +16,8 @@ to add the bot to your server.
 
 - `/help` - Get information about this bot and how to use it.
 - `/paissa` - Get detailed housing information.
-- `/announcement` - Configure a text channel to receive housing phase announcements.
+- `/announcement` - Configure a text channel to receive housing phase
+  announcements.
 
 ## Transparency
 
@@ -186,7 +187,8 @@ environment isolated from production.
 5. **Access development database**:
    - **Via CLI**: `docker exec -it mysql-dev mysql -u paissa_user -p` (use
      password from your `.env`)
-   - **Via phpMyAdmin**: Access `http://localhost:8080` in your browser and login with the credentials from your `.env`
+   - **Via phpMyAdmin**: Access `http://localhost:8080` in your browser and
+     login with the credentials from your `.env`
 
 6. **Clean up**:
 
