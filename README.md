@@ -150,10 +150,11 @@ line.
 
 ### Development Setup
 
-For development, use the `docker-compose.dev.yml` file which builds from your
-local source code and enables hot reloading:
+For development, use the `docker-compose.dev.yml` file which includes a local
+MySQL container and enables hot reloading. This keeps your development
+environment isolated from production.
 
-1. **Build and start the development bot**:
+1. **Start development environment** (bot + MySQL):
    ```bash
    docker compose -f docker-compose.dev.yml up -d --build
    ```
@@ -163,12 +164,39 @@ local source code and enables hot reloading:
    docker run --rm --env-file .env -e REGISTER_COMMANDS=true -e ENVIRONMENT=development paissa-house-discord-bot-dev
    ```
 
-3. **Hot reloading**:
-   - Changes to files in the `src` directory are automatically available in the
-     container
-   - After significant changes, you may need to restart the service:
+3. **View logs**:
+
+   Bot logs
    ```bash
-   docker compose -f docker-compose.dev.yml restart bot
+   docker logs -f paissa-house-bot-dev
+   ```
+
+   MySQL logs
+   ```bash
+   docker logs -f mysql-dev
+   ```
+
+4. **Hot reloading**:
+   - Changes to files in the `src` directory are automatically available
+   - The bot will restart automatically on file changes
+   - Database schema changes require restart:
+     `docker compose -f docker-compose.dev.yml restart bot`
+
+5. **Access development database**:
+   - **Via CLI**: `docker exec -it mysql-dev mysql -u paissa_user -p` (use
+     password from your `.env`)
+   - **Via Drizzle Studio**: `deno task db:studio`
+
+6. **Clean up**:
+
+   Stop containers
+   ```bash
+   docker compose -f docker-compose.dev.yml down
+   ```
+
+   Stop and remove volumes (wipes dev database)
+   ```bash
+   docker compose -f docker-compose.dev.yml down -v
    ```
 
 ### Production Setup
