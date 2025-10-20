@@ -7,7 +7,8 @@ type LogCategory =
   | "CLEANUP"
   | "SYSTEM"
   | "PRESENCE"
-  | "CACHE";
+  | "CACHE"
+  | "DATABASE";
 
 const COLORS = {
   reset: "\x1b[0m",
@@ -45,6 +46,7 @@ const CATEGORY_COLORS: Record<LogCategory, string> = {
   SYSTEM: COLORS.white,
   PRESENCE: COLORS.green,
   CACHE: COLORS.bright + COLORS.blue,
+  DATABASE: COLORS.bright + COLORS.cyan,
 };
 
 export class Logger {

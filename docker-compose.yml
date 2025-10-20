@@ -9,9 +9,10 @@ services:
       - REGISTER_COMMANDS=false
       - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-}
       - ENVIRONMENT=production
-    volumes:
-      - paissa_data:/app/data
+    networks:
+      - mysql-network
 
-volumes:
-  paissa_data:
-    name: paissa_data
+networks:
+  mysql-network:
+    external: true
+    name: mysql-network
