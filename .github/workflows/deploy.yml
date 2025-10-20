@@ -64,6 +64,6 @@ jobs:
             # Pull the latest images
             docker compose pull
             # Register application commands (production mode for global commands)
-            DEPLOYMENT_HASH=${{ github.sha }} docker compose run -e ENVIRONMENT=production register-commands
+            DEPLOYMENT_HASH=${{ github.sha }} docker compose run --rm -e ENVIRONMENT=production register-commands
             # Start the containers with deployment hash for transparency
-            DEPLOYMENT_HASH=${{ github.sha }} docker compose up -d
+            DEPLOYMENT_HASH=${{ github.sha }} docker compose up -d --remove-orphans
