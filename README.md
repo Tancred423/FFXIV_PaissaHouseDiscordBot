@@ -1,4 +1,4 @@
-<img align="left" width="80" height="80" src="https://zhu.codes/assets/PaissaLogo.c38c9420.png" alt="PaissaDB Logo">
+<img align="left" width="70" height="70" src="https://zhu.codes/assets/PaissaLogo.c38c9420.png" alt="PaissaDB Logo">
 
 # FF14 Housing Discord Bot
 
