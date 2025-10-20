@@ -16,6 +16,7 @@ to add the bot to your server.
 
 - `/help` - Get information about this bot and how to use it.
 - `/paissa` - Get detailed housing information.
+- `/announcement` - Configure a text channel to receive housing phase announcements.
 
 ## Transparency
 
