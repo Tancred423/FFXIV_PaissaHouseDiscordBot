@@ -16,6 +16,7 @@ services:
       - ./src:/app/src
 
   register-commands:
+    profiles: ["manual"]
     build:
       context: .
       dockerfile: Dockerfile

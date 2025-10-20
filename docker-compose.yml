@@ -13,6 +13,7 @@ services:
       - paissa_data:/app/data
 
   register-commands:
+    profiles: ["manual"]
     image: ghcr.io/tancred423/paissa-house-discord-bot:latest
     env_file:
       - .env
