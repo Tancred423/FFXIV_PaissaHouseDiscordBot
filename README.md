@@ -51,8 +51,8 @@ complete transparency between the published code and deployed bot.
    ```bash
    cp .env.skel .env
    ```
-   - Fill in your Discord bot token, application ID, and emoji markdowns you've
-     copied above.
+   - Fill in your Discord bot token, application ID, and emoji markdowns
+     you've copied above.
    - The MySQL credentials should match what you set in your MySQL server.
 
 ### MySQL Database Setup
@@ -68,39 +68,63 @@ that can be shared across multiple applications:
 2. **Create docker-compose.yml**:
    ```bash
    cat > docker-compose.yml << 'EOF'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-server
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: paissa_bot
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - mysql-network
+    command: --default-authentication-plugin=mysql_native_password
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    ports:
+      - "127.0.0.1:8082:80" # Might wanna change the port depending on your setup
+    networks:
+      - mysql-network
+    depends_on:
+      - mysql
+
+volumes:
+  mysql_data:
+    name: mysql_data
+
+networks:
+  mysql-network:
+    name: mysql-network
+    driver: bridge
+EOF
    ```
 
-services: mysql: image: mysql:8.0 container_name: mysql-server restart:
-unless-stopped environment: MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-MYSQL_DATABASE: paissa_bot MYSQL_USER: ${MYSQL_USER} MYSQL_PASSWORD:
-${MYSQL_PASSWORD} ports: - "127.0.0.1:3306:3306" volumes: -
-mysql_data:/var/lib/mysql networks: - mysql-network command:
---default-authentication-plugin=mysql_native_password
-
-phpmyadmin: image: phpmyadmin:latest container_name: phpmyadmin restart:
-unless-stopped environment: PMA_HOST: mysql PMA_PORT: 3306 PMA_ARBITRARY: 1
-ports: - "127.0.0.1:8082:80" # Might wanna change the port depending on your
-setup networks: - mysql-network depends_on: - mysql
-
-volumes: mysql_data: name: mysql_data
-
-networks: mysql-network: name: mysql-network driver: bridge EOF
-
-````
 3. **Create .env file for MySQL**:
-```bash
-cat > .env << 'EOF'
+   ```bash
+   cat > .env << 'EOF'
 MYSQL_ROOT_PASSWORD=CHANGE_ME_STRONG_ROOT_PASSWORD
 MYSQL_USER=paissa_user
 MYSQL_PASSWORD=CHANGE_ME_STRONG_USER_PASSWORD
 EOF
-````
+   ```
 
 3.1. Edit with strong passwords
-
-```bash
-nano .env
-```
+   ```bash
+   nano .env
+   ```
 
 4. **Start MySQL server**:
    ```bash
@@ -110,19 +134,17 @@ nano .env
 5. **Access phpMyAdmin via SSH Tunnel**:
 
    phpMyAdmin is only accessible through an SSH tunnel, keeping it completely
-   isolated from the internet for maximum security. On your local machine
-   (adjust port if needed):
+   isolated from the internet for maximum security.
+   On your local machine (adjust port if needed):
    ```bash
    ssh -L 8082:localhost:8082 user@your-server
    ```
-   While the tunnel is active, open in your browser: `http://localhost:8082`
-   (adjust port if needed) Login with your MySQL credentials (username:
-   `paissa_user`, password from `.env`)
+   While the tunnel is active, open in your browser: `http://localhost:8082` (adjust port if needed)
+   Login with your MySQL credentials (username: `paissa_user`, password from `.env`)
 
 The bot will automatically connect to the MySQL server via the `mysql-network`
 Docker network. phpMyAdmin provides a user-friendly interface to browse tables,
-run queries, export data, and manage your databases without using the command
-line.
+run queries, export data, and manage your databases without using the command line.
 
 ### Development Setup
 
