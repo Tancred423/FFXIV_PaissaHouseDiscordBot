@@ -5,7 +5,7 @@
 An unofficial Discord bot to display data from
 [PaissaDB](https://zhu.codes/paissa).
 
-![Results](https://filedn.eu/l1k9l7NzagvkkVpPyvEflCm/PaissaHouse/Results_Paginated.png)
+<img height="600" src="https://filedn.eu/l1k9l7NzagvkkVpPyvEflCm/PaissaHouse/Results_Paginated.png" alt="PaissaDB Logo">
 
 ## Add the bot to your server
 
