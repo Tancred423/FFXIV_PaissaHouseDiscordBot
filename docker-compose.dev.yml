@@ -13,9 +13,11 @@ services:
       - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-dev}
       - ENVIRONMENT=development
     volumes:
-      - paissa_data:/app/data
       - ./src:/app/src
+    networks:
+      - mysql-network
 
-volumes:
-  paissa_data:
-    name: paissa_data_dev
+networks:
+  mysql-network:
+    external: true
+    name: mysql-network

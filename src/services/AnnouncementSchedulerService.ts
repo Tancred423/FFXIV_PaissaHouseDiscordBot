@@ -108,7 +108,7 @@ export class AnnouncementSchedulerService {
         "SCHEDULER",
         `Sending announcements for phase ${LottoPhase[phase]}`,
       );
-      const guildSettings = DatabaseService.getAllGuildSettings();
+      const guildSettings = await DatabaseService.getAllGuildSettings();
 
       let title: string;
       let description: string;
@@ -186,14 +186,14 @@ export class AnnouncementSchedulerService {
         "CLEANUP",
         "Running periodic cleanup of dead guild/channel data...",
       );
-      const guildSettings = DatabaseService.getAllGuildSettings();
+      const guildSettings = await DatabaseService.getAllGuildSettings();
       let cleanedCount = 0;
 
       for (const settings of guildSettings) {
         try {
           const guild = await this.client.guilds.fetch(settings.guildId);
           if (!guild) {
-            DatabaseService.removeAnnouncementChannel(settings.guildId);
+            await DatabaseService.removeAnnouncementChannel(settings.guildId);
             cleanedCount++;
             Logger.info(
               "CLEANUP",
@@ -206,7 +206,7 @@ export class AnnouncementSchedulerService {
             settings.announcementChannelId,
           );
           if (!channel || !(channel instanceof TextChannel)) {
-            DatabaseService.removeAnnouncementChannel(settings.guildId);
+            await DatabaseService.removeAnnouncementChannel(settings.guildId);
             cleanedCount++;
             Logger.info(
               "CLEANUP",

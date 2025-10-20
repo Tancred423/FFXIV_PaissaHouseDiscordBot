@@ -2,12 +2,19 @@
   "imports": {
     "discord.js": "npm:discord.js@14.23.2",
     "dotenv": "npm:dotenv@16.3.1",
-    "@db/sqlite": "jsr:@db/sqlite@0.12",
+    "drizzle-orm": "npm:drizzle-orm@0.36.4",
+    "drizzle-orm/mysql-core": "npm:drizzle-orm@0.36.4/mysql-core",
+    "drizzle-orm/mysql2": "npm:drizzle-orm@0.36.4/mysql2",
+    "drizzle-kit": "npm:drizzle-kit@0.30.0",
+    "mysql2": "npm:mysql2@3.11.5",
     "croner": "npm:croner@8.0.0"
   },
   "tasks": {
     "register": "deno run --allow-net --allow-env --allow-read --allow-ffi --unstable-ffi src/register-commands.ts",
-    "start": "deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --unstable-ffi src/main.ts"
+    "start": "deno run --allow-net --allow-env --allow-read --allow-write --allow-ffi --unstable-ffi src/main.ts",
+    "db:generate": "deno run -A npm:drizzle-kit generate",
+    "db:migrate": "deno run --allow-net --allow-env --allow-read src/db/migrate.ts",
+    "db:studio": "deno run -A npm:drizzle-kit studio"
   },
   "compilerOptions": {
     "lib": ["deno.window"],

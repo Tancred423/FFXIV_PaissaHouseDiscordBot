@@ -70,7 +70,7 @@ export class AnnouncementCommand extends BaseCommand {
   ): Promise<void> {
     const channel = interaction.options.getChannel("channel", true);
 
-    DatabaseService.setAnnouncementChannel(
+    await DatabaseService.setAnnouncementChannel(
       interaction.guildId!,
       channel.id,
     );
@@ -84,7 +84,7 @@ export class AnnouncementCommand extends BaseCommand {
   private async handleRemoveSubcommand(
     interaction: ChatInputCommandInteraction,
   ): Promise<void> {
-    const hasBeenRemoved = DatabaseService.removeAnnouncementChannel(
+    const hasBeenRemoved = await DatabaseService.removeAnnouncementChannel(
       interaction.guildId!,
     );
 
@@ -100,7 +100,7 @@ export class AnnouncementCommand extends BaseCommand {
   private async handleViewSubcommand(
     interaction: ChatInputCommandInteraction,
   ): Promise<void> {
-    const announementChannelId = DatabaseService.getAnnouncementChannel(
+    const announementChannelId = await DatabaseService.getAnnouncementChannel(
       interaction.guildId!,
     );
 

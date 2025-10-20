@@ -75,7 +75,7 @@ client.once(Events.ClientReady, async () => {
     `Discord initialized successfully as ${client.user?.tag} with ${commands.size} commands`,
   );
 
-  DatabaseService.initialize();
+  await DatabaseService.initialize();
 
   const presenceService = new PresenceService(client);
   await presenceService.updatePresence();
@@ -90,8 +90,8 @@ client.once(Events.ClientReady, async () => {
   scheduler.start();
 });
 
-client.on(Events.GuildDelete, (guild) => {
-  const removed = DatabaseService.removeAnnouncementChannel(guild.id);
+client.on(Events.GuildDelete, async (guild) => {
+  const removed = await DatabaseService.removeAnnouncementChannel(guild.id);
   if (removed) {
     Logger.info(
       "CLEANUP",
@@ -100,13 +100,13 @@ client.on(Events.GuildDelete, (guild) => {
   }
 });
 
-client.on(Events.ChannelDelete, (channel) => {
+client.on(Events.ChannelDelete, async (channel) => {
   if (!channel.isDMBased() && channel.guildId) {
-    const storedChannelId = DatabaseService.getAnnouncementChannel(
+    const storedChannelId = await DatabaseService.getAnnouncementChannel(
       channel.guildId,
     );
     if (storedChannelId === channel.id) {
-      DatabaseService.removeAnnouncementChannel(channel.guildId);
+      await DatabaseService.removeAnnouncementChannel(channel.guildId);
       Logger.info(
         "CLEANUP",
         `Cleaned up announcement settings for deleted channel ${channel.id} in guild ${channel.guildId}`,

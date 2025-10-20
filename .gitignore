@@ -1,2 +1,5 @@
 .env
-paissa_bot.db
+node_modules/
+data/
+*.db
+*.db-journal
