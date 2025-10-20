@@ -62,13 +62,13 @@ local source code and enables hot reloading:
 1. **Build and start the development bot**:
    ```bash
    # Build with local source code and start in development mode
-   docker-compose -f docker-compose.dev.yml up -d --build
+   docker compose -f docker-compose.dev.yml up -d --build
    ```
 
 2. **Register development commands** (guild-specific):
    ```bash
    # Register commands for development
-   docker-compose -f docker-compose.dev.yml run register-commands
+   docker run --rm --env-file .env -e REGISTER_COMMANDS=true -e ENVIRONMENT=development paissa-house-discord-bot-dev
    ```
 
 3. **Hot reloading**:
@@ -76,7 +76,7 @@ local source code and enables hot reloading:
      container
    - After significant changes, you may need to restart the service:
    ```bash
-   docker-compose -f docker-compose.dev.yml restart bot
+   docker compose -f docker-compose.dev.yml restart bot
    ```
 
 ### Production Setup
@@ -121,11 +121,11 @@ pre-built image from GitHub Container Registry:
 3. **Start the production bot**:
    ```bash
    # Start with deployment hash for transparency
-   DEPLOYMENT_HASH=$(git rev-parse HEAD) docker-compose up -d
+   DEPLOYMENT_HASH=$(git rev-parse HEAD) docker compose up -d
    ```
 
 4. **Register global application commands**:
    ```bash
    # Register commands globally
-   DEPLOYMENT_HASH=$(git rev-parse HEAD) docker-compose run register-commands
+   docker run --rm --env-file .env -e REGISTER_COMMANDS=true -e ENVIRONMENT=production ghcr.io/tancred423/paissa-house-discord-bot:latest
    ```

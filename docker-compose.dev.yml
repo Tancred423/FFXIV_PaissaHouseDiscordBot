@@ -1,5 +1,6 @@
 services:
   bot:
+    image: paissa-house-discord-bot-dev
     build:
       context: .
       dockerfile: Dockerfile
@@ -14,19 +15,6 @@ services:
     volumes:
       - paissa_data:/app/data
       - ./src:/app/src
-
-  register-commands:
-    profiles: ["manual"]
-    build:
-      context: .
-      dockerfile: Dockerfile
-    env_file:
-      - .env
-    environment:
-      - REGISTER_COMMANDS=true
-      - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-dev}
-      - ENVIRONMENT=development
-    restart: "no"
 
 volumes:
   paissa_data:
