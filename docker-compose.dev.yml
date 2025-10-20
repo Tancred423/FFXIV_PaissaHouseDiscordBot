@@ -20,6 +20,22 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+      
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin-dev
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-dev_root_password}
+    ports:
+      - "127.0.0.1:8080:80"
+    networks:
+      - mysql-network
+    depends_on:
+      mysql:
+        condition: service_healthy
 
   bot:
     image: paissa-house-discord-bot-dev

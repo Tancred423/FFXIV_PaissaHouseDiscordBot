@@ -186,7 +186,7 @@ environment isolated from production.
 5. **Access development database**:
    - **Via CLI**: `docker exec -it mysql-dev mysql -u paissa_user -p` (use
      password from your `.env`)
-   - **Via Drizzle Studio**: `deno task db:studio`
+   - **Via phpMyAdmin**: Access `http://localhost:8080` in your browser and login with the credentials from your `.env`
 
 6. **Clean up**:
 
