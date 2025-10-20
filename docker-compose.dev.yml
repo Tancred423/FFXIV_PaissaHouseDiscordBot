@@ -20,7 +20,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
-      
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin-dev
