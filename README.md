@@ -219,6 +219,3 @@ pre-built image from GitHub Container Registry:
    ```bash
    docker run --rm --env-file .env -e REGISTER_COMMANDS=true -e ENVIRONMENT=production ghcr.io/tancred423/paissa-house-discord-bot:latest
    ```
-
-```
-```
