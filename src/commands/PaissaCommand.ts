@@ -596,7 +596,17 @@ export class PaissaCommand extends BaseCommand {
             components: [],
           });
         }
-      } catch (error) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : null;
+
+        if (errorMessage === "Missing Access") {
+          Logger.warn(
+            "COMMAND",
+            "Failed to remove pagination buttons: Missing Access",
+          );
+          return;
+        }
+
         Logger.error("COMMAND", "Failed to remove pagination buttons", error);
       }
     });
