@@ -8,6 +8,7 @@ import { type GuildSettings, guildSettings } from "../db/schema.ts";
 export class DatabaseService {
   private static connection: mysql.Connection;
   private static db: MySql2Database;
+  private static isReconnecting = false;
 
   static async initialize(): Promise<void> {
     const host = Deno.env.get("MYSQL_HOST") || "mysql-server";
@@ -40,10 +41,77 @@ export class DatabaseService {
     }
   }
 
-  static getDb(): MySql2Database {
+  private static async isConnectionAlive(): Promise<boolean> {
+    if (!this.connection) {
+      return false;
+    }
+
+    try {
+      await this.connection.ping();
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private static async reconnect(): Promise<void> {
+    if (this.isReconnecting) {
+      while (this.isReconnecting) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      return;
+    }
+
+    this.isReconnecting = true;
+
+    try {
+      Logger.warn("DATABASE", "Connection lost, attempting to reconnect...");
+
+      const host = Deno.env.get("MYSQL_HOST") || "mysql-server";
+      const user = Deno.env.get("MYSQL_USER") || "paissa_user";
+      const password = Deno.env.get("MYSQL_PASSWORD");
+      const database = Deno.env.get("MYSQL_DATABASE") || "paissa_bot";
+
+      if (!password) {
+        throw new Error("MYSQL_PASSWORD environment variable is required");
+      }
+
+      if (this.connection) {
+        try {
+          await this.connection.end();
+        } catch {
+          // Ignore errors
+        }
+      }
+
+      this.connection = await mysql.createConnection({
+        host,
+        user,
+        password,
+        database,
+      });
+
+      this.db = drizzle(this.connection);
+
+      Logger.info("DATABASE", "Reconnected to database successfully");
+    } catch (error) {
+      Logger.error("DATABASE", "Failed to reconnect to MySQL:", error);
+      throw error;
+    } finally {
+      this.isReconnecting = false;
+    }
+  }
+
+  static async getDb(): Promise<MySql2Database> {
     if (!this.db) {
       throw new Error("Database not initialized. Call initialize() first.");
     }
+
+    const isAlive = await this.isConnectionAlive();
+    if (!isAlive) {
+      await this.reconnect();
+    }
+
     return this.db;
   }
 
@@ -51,7 +119,8 @@ export class DatabaseService {
     guildId: string,
     channelId: string,
   ): Promise<void> {
-    await this.db
+    const db = await this.getDb();
+    await db
       .insert(guildSettings)
       .values({
         guildId,
@@ -63,7 +132,8 @@ export class DatabaseService {
   }
 
   static async removeAnnouncementChannel(guildId: string): Promise<boolean> {
-    const result = await this.db
+    const db = await this.getDb();
+    const result = await db
       .delete(guildSettings)
       .where(eq(guildSettings.guildId, guildId));
 
@@ -73,7 +143,8 @@ export class DatabaseService {
   static async getAnnouncementChannel(
     guildId: string,
   ): Promise<string | null> {
-    const results = await this.db
+    const db = await this.getDb();
+    const results = await db
       .select()
       .from(guildSettings)
       .where(eq(guildSettings.guildId, guildId))
@@ -86,7 +157,8 @@ export class DatabaseService {
   }
 
   static async getAllGuildSettings(): Promise<GuildSettings[]> {
-    return await this.db.select().from(guildSettings);
+    const db = await this.getDb();
+    return await db.select().from(guildSettings);
   }
 
   static async close(): Promise<void> {
