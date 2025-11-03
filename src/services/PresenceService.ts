@@ -65,19 +65,25 @@ export class PresenceService {
   }
 
   private buildTimeString(totalSeconds: number): string {
-    const days = Math.floor(totalSeconds / (60 * 60 * 24));
+    const SECONDS_IN_HOUR = 3600;
+    const SECONDS_IN_DAY = 86400;
+
+    const days = Math.floor(totalSeconds / SECONDS_IN_DAY);
+    const remainingSeconds = totalSeconds - days * SECONDS_IN_DAY;
+
+    let hours: number;
+
     if (days > 0) {
-      const remainingSeconds = totalSeconds - (days * 60 * 60 * 24);
-      const hours = Math.floor(remainingSeconds / (60 * 60));
-
-      if (hours > 0) {
-        return `${days}d, ${hours}h`;
+      hours = Math.ceil(remainingSeconds / SECONDS_IN_HOUR);
+      if (hours === 24) {
+        return `${days + 1}d`;
       }
-
-      return `${days} ${days === 1 ? "day" : "days"}`;
+      return hours > 0
+        ? `${days}d, ${hours}h`
+        : `${days} ${days === 1 ? "day" : "days"}`;
     }
 
-    const hours = Math.floor(totalSeconds / (60 * 60));
+    hours = Math.floor(totalSeconds / SECONDS_IN_HOUR);
     if (hours > 0) {
       return `${hours} ${hours === 1 ? "hour" : "hours"}`;
     }
