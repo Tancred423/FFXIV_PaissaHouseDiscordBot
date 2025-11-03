@@ -69,14 +69,12 @@ export class PresenceService {
     if (days > 0) {
       const remainingSeconds = totalSeconds - (days * 60 * 60 * 24);
       const hours = Math.floor(remainingSeconds / (60 * 60));
-      const dayText = `${days} ${days === 1 ? "day" : "days"}`;
 
       if (hours > 0) {
-        const hourText = `${hours} ${hours === 1 ? "hour" : "hours"}`;
-        return `${dayText}, ${hourText}`;
+        return `${days}d, ${hours}h`;
       }
 
-      return dayText;
+      return `${days} ${days === 1 ? "day" : "days"}`;
     }
 
     const hours = Math.floor(totalSeconds / (60 * 60));
