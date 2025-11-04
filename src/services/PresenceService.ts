@@ -76,7 +76,7 @@ export class PresenceService {
     if (days > 0) {
       hours = Math.ceil(remainingSeconds / SECONDS_IN_HOUR);
       if (hours === 24) {
-        return `${days + 1}d`;
+        return `${days + 1} days`;
       }
       return hours > 0
         ? `${days}d, ${hours}h`
