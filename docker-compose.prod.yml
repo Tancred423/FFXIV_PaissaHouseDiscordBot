@@ -1,0 +1,18 @@
+services:
+  bot:
+    image: ghcr.io/tancred423/paissa-house-discord-bot:latest
+    container_name: paissa-house-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - REGISTER_COMMANDS=false
+      - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-}
+      - ENVIRONMENT=production
+    networks:
+      - mysql-network
+
+networks:
+  mysql-network:
+    external: true
+    name: mysql-network

@@ -49,6 +49,15 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ vars.USERNAME_LOWERCASE }}/paissa-house-discord-bot:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ vars.USERNAME_LOWERCASE }}/paissa-house-discord-bot:buildcache,mode=max
 
+      - name: Copy docker-compose.prod.yml to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          source: "docker-compose.prod.yml"
+          target: "~/paissa-bot/"
+
       - name: Deploy to server
         uses: appleboy/ssh-action@master
         with:
@@ -58,12 +67,12 @@ jobs:
           script: |
             cd ~/paissa-bot
             # Stop containers but keep volumes (--volumes=false)
-            docker compose down --volumes=false
+            docker compose -f docker-compose.prod.yml down --volumes=false
             # Clean up any related dangling images without affecting other services
             docker image prune -f --filter "label=org.opencontainers.image.source=https://github.com/${{ vars.USERNAME_LOWERCASE }}/FFXIV_PaissaHouseDiscordBot"
             # Pull the latest images
-            docker compose pull
+            docker compose -f docker-compose.prod.yml pull
             # Register application commands (production mode for global commands)
             docker run --rm --env-file .env -e REGISTER_COMMANDS=true -e ENVIRONMENT=production ghcr.io/${{ vars.USERNAME_LOWERCASE }}/paissa-house-discord-bot:latest
             # Start the containers with deployment hash for transparency
-            DEPLOYMENT_HASH=${{ github.sha }} docker compose up -d --remove-orphans
+            DEPLOYMENT_HASH=${{ github.sha }} docker compose -f docker-compose.prod.yml up -d --remove-orphans
