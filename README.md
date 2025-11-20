@@ -158,7 +158,7 @@ environment isolated from production.
 
 1. **Start development environment** (bot + MySQL):
    ```bash
-   docker compose -f docker-compose.dev.yml up -d --build
+   docker compose up -d --build
    ```
 
 2. **Register development commands** (guild-specific):
@@ -194,12 +194,12 @@ environment isolated from production.
 
    Stop containers
    ```bash
-   docker compose -f docker-compose.dev.yml down
+   docker compose down
    ```
 
    Stop and remove volumes (wipes dev database)
    ```bash
-   docker compose -f docker-compose.dev.yml down -v
+   docker compose down -v
    ```
 
 ### Production Setup
@@ -243,7 +243,7 @@ pre-built image from GitHub Container Registry:
 
 3. **Start the production bot**:
    ```bash
-   DEPLOYMENT_HASH=$(git rev-parse HEAD) docker compose up -d
+   DEPLOYMENT_HASH=$(git rev-parse HEAD) docker compose up -f docker-compose.prod.yml -d
    ```
 
 4. **Register global application commands**:

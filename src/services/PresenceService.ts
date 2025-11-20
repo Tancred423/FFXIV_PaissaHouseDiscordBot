@@ -56,6 +56,10 @@ export class PresenceService {
     const now = Date.now() / 1000;
     const diffInSeconds = currentOrLatestPhase.until - now;
     const timeString = this.buildTimeString(diffInSeconds);
+    Logger.info(
+      "PRESENCE",
+      `Setting presence "${timeString}" from seconds "${diffInSeconds}".`,
+    );
 
     if (!currentOrLatestPhase.isCurrent) {
       return currentOrLatestPhase.phaseName + " ended " + timeString + " ago";

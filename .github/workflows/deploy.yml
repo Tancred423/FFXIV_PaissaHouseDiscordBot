@@ -71,7 +71,7 @@ jobs:
             # Clean up any related dangling images without affecting other services
             docker image prune -f --filter "label=org.opencontainers.image.source=https://github.com/${{ vars.USERNAME_LOWERCASE }}/FFXIV_PaissaHouseDiscordBot"
             # Pull the latest images
-            docker compose -f docker-compose.prod.yml pull
+            DEPLOYMENT_HASH=${{ github.sha }} docker compose -f docker-compose.prod.yml pull
             # Register application commands (production mode for global commands)
             docker run --rm --env-file .env -e REGISTER_COMMANDS=true -e ENVIRONMENT=production ghcr.io/${{ vars.USERNAME_LOWERCASE }}/paissa-house-discord-bot:latest
             # Start the containers with deployment hash for transparency
