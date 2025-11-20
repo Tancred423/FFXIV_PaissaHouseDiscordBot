@@ -1,13 +1,13 @@
 services:
   bot:
-    image: ghcr.io/tancred423/paissa-house-discord-bot:${DEPLOYMENT_HASH}
+    image: ghcr.io/tancred423/paissa-house-discord-bot:${DEPLOYMENT_HASH:-latest}
     container_name: paissa-house-bot
     restart: unless-stopped
     env_file:
       - .env
     environment:
       - REGISTER_COMMANDS=false
-      - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-}
+      - DEPLOYMENT_HASH=${DEPLOYMENT_HASH:-latest}
       - ENVIRONMENT=production
     networks:
       - mysql-network
