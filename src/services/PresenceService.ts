@@ -71,21 +71,22 @@ export class PresenceService {
     const days = Math.floor(totalSeconds / SECONDS_IN_DAY);
     const remainingSeconds = totalSeconds - days * SECONDS_IN_DAY;
 
-    let hours: number;
+    const roundedHours = Math.round(remainingSeconds / SECONDS_IN_HOUR);
 
     if (days > 0) {
-      hours = Math.ceil(remainingSeconds / SECONDS_IN_HOUR);
-      if (hours === 24) {
+      if (roundedHours === 24) {
         return `${days + 1} days`;
       }
-      return hours > 0
-        ? `${days}d, ${hours}h`
-        : `${days} ${days === 1 ? "day" : "days"}`;
+
+      if (roundedHours > 0) {
+        return `${days}d, ${roundedHours}h`;
+      }
+
+      return `${days} ${days === 1 ? "day" : "days"}`;
     }
 
-    hours = Math.floor(totalSeconds / SECONDS_IN_HOUR);
-    if (hours > 0) {
-      return `${hours} ${hours === 1 ? "hour" : "hours"}`;
+    if (roundedHours >= 2) {
+      return `${roundedHours} ${roundedHours === 1 ? "hour" : "hours"}`;
     }
 
     return "< 1 hour";
